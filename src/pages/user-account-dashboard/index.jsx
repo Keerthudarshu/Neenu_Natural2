@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import Header from '../../components/ui/Header';
 import DashboardSidebar from './components/DashboardSidebar';
 import DashboardOverview from './components/DashboardOverview';
@@ -11,25 +12,47 @@ import PreferencesSection from './components/PreferencesSection';
 
 const UserAccountDashboard = () => {
   const location = useLocation();
+  const { user: authUser, userProfile } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Mock user data
+  // Use real user data from AuthContext or fallback to mock data
   const [user, setUser] = useState({
-    id: 1,
-    name: "Priya Sharma",
-    email: "priya.sharma@email.com",
-    phone: "+91 9876543210",
-    dateOfBirth: "1990-05-15",
-    gender: "Female",
-    memberSince: "January 2023",
-    totalOrders: 24,
-    totalSpent: "12,450",
-    totalSaved: "2,340",
-    loyaltyPoints: 1250,
-    wishlistCount: 8,
-    lastPasswordChange: "15th Aug 2024"
+    id: authUser?.id || 1,
+    name: authUser?.name || authUser?.email || "Guest User",
+    email: authUser?.email || "guest@example.com",
+    phone: authUser?.phone || "+91 9876543210",
+    dateOfBirth: authUser?.dateOfBirth || "1990-05-15",
+    gender: authUser?.gender || "Not specified",
+    memberSince: authUser?.memberSince || "January 2023",
+    totalOrders: authUser?.totalOrders || 0,
+    totalSpent: authUser?.totalSpent || "0",
+    totalSaved: authUser?.totalSaved || "0",
+    loyaltyPoints: authUser?.loyaltyPoints || 0,
+    wishlistCount: authUser?.wishlistCount || 0,
+    lastPasswordChange: authUser?.lastPasswordChange || "Not set"
   });
+
+  // Update user data when authUser changes
+  useEffect(() => {
+    if (authUser) {
+      setUser({
+        id: authUser.id || 1,
+        name: authUser.name || authUser.email || "Guest User",
+        email: authUser.email || "guest@example.com",
+        phone: authUser.phone || "+91 9876543210",
+        dateOfBirth: authUser.dateOfBirth || "1990-05-15",
+        gender: authUser.gender || "Not specified",
+        memberSince: authUser.memberSince || "January 2023",
+        totalOrders: authUser.totalOrders || 0,
+        totalSpent: authUser.totalSpent || "0",
+        totalSaved: authUser.totalSaved || "0",
+        loyaltyPoints: authUser.loyaltyPoints || 0,
+        wishlistCount: authUser.wishlistCount || 0,
+        lastPasswordChange: authUser.lastPasswordChange || "Not set"
+      });
+    }
+  }, [authUser]);
 
   // Mock orders data
   const [orders] = useState([
@@ -361,7 +384,7 @@ const UserAccountDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        isLoggedIn={true}
+        isLoggedIn={!!authUser}
         onSearch={(query) => console.log('Search:', query)}
       />
       <div className="container mx-auto px-4 py-8">

@@ -12,10 +12,10 @@ const CartDrawer = ({ isOpen, onClose, cartItems = [], onUpdateQuantity, onRemov
   const total = subtotal + shipping;
 
   const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity === 0) {
-      onRemoveItem(itemId);
+    if (newQuantity <= 0) {
+      onRemoveItem?.(itemId);
     } else {
-      onUpdateQuantity(itemId, newQuantity);
+      onUpdateQuantity?.(itemId, newQuantity);
     }
   };
 
