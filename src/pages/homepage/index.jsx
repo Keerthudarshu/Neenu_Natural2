@@ -33,11 +33,24 @@ const Homepage = () => {
         quantity: 1
       }
     ];
-    setCartItems(mockCartItems);
+    // The original code had setCartItems(mockCartItems) here which would be incorrect if CartContext doesn't manage initial state this way.
+    // Assuming addToCart handles adding items and the context maintains the state.
+    // If initial cart state is needed, it should be handled within CartContext.
   }, []);
 
   const handleAddToCart = (product) => {
-    addToCart(product, 1);
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.salePrice,
+      originalPrice: product.originalPrice,
+      image: product.image,
+      variant: 'Default',
+      category: product.category,
+      brand: product.brand
+    };
+    addToCart(cartItem, 1);
+    console.log('Added to cart:', cartItem);
   };
 
   const handleSearch = (query) => {
@@ -50,9 +63,9 @@ const Homepage = () => {
     <>
       <Helmet>
         <title>Neenu's Natural - Premium Natural & Handmade Food Products</title>
-        <meta 
-          name="description" 
-          content="Discover authentic Indian flavors with Neenu's Natural premium handmade food products. From traditional sweets to organic spices, experience pure natural taste with free shipping on orders above ₹499." 
+        <meta
+          name="description"
+          content="Discover authentic Indian flavors with Neenu's Natural premium handmade food products. From traditional sweets to organic spices, experience pure natural taste with free shipping on orders above ₹499."
         />
         <meta name="keywords" content="natural food products, handmade sweets, organic spices, traditional pickles, pure ghee, Indian food, authentic flavors, chemical-free, preservative-free" />
         <meta property="og:title" content="Neenu's Natural - Premium Natural & Handmade Food Products" />
