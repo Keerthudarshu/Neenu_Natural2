@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import dataService from '../services/dataService'
 
 const AuthContext = createContext({})
 
@@ -17,43 +18,92 @@ export const AuthProvider = ({ children, setError }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session - Use Promise chain
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (session?.user) {
-          setUser(session.user)
-          fetchUserProfile(session.user.id)
+    // Check for existing session in localStorage
+    const checkExistingSession = async () => {
+      try {
+        const sessionData = localStorage.getItem('neenu_auth_session');
+        if (sessionData) {
+          const session = JSON.parse(sessionData);
+          const user = dataService.getUser(session.userId);
+          if (user) {
+            setUser(user);
+            setUserProfile(user);
+          }
         }
-        setLoading(false)
-      })
-
-    // Listen for auth changes - NEVER ASYNC callback
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session?.user) {
-          setUser(session.user)
-          fetchUserProfile(session.user.id)  // Fire-and-forget, NO AWAIT
-        } else {
-          setUser(null)
-          setUserProfile(null)
-        }
-        setLoading(false)
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
       }
-    )
+    };
 
-    return () => subscription?.unsubscribe()
+    checkExistingSession();
   }, [])
 
-  const fetchUserProfile = (userId) => {
-    // code
-  }
+  const signIn = async (email, password) => {
+    try {
+      setLoading(true);
+      const user = dataService.authenticate(email, password);
+      
+      if (user) {
+        setUser(user);
+        setUserProfile(user);
+        
+        // Save session
+        localStorage.setItem('neenu_auth_session', JSON.stringify({
+          userId: user.id,
+          timestamp: Date.now()
+        }));
+        
+        return { user, error: null };
+      } else {
+        return { user: null, error: { message: 'Invalid credentials' } };
+      }
+    } catch (error) {
+      return { user: null, error };
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const signOut = async () => {
+    try {
+      setUser(null);
+      setUserProfile(null);
+      localStorage.removeItem('neenu_auth_session');
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
+  const isAdmin = () => {
+    return user?.role === 'admin';
+  };
+
+  const updateProfile = async (updates) => {
+    try {
+      if (!user) return { error: { message: 'No user logged in' } };
+      
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      setUserProfile(updatedUser);
+      
+      // In a real app, you'd update the database here
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
 
   const value = {
     user,
     userProfile,
     loading,
-    // other methods
+    signIn,
+    signOut,
+    isAdmin,
+    updateProfile
   }
 
   return (

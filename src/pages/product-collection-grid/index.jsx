@@ -8,12 +8,13 @@ import SortDropdown from './components/SortDropdown';
 import ProductGrid from './components/ProductGrid';
 import QuickViewModal from './components/QuickViewModal';
 import Button from '../../components/ui/Button';
+import dataService from '../../services/dataService';
 
 
 const ProductCollectionGrid = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  
+
   // State management
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -35,210 +36,31 @@ const ProductCollectionGrid = () => {
     brands: []
   });
 
-  // Mock product data
-  const mockProducts = [
-    {
-      id: 1,
-      name: "Traditional Mysore Pak",
-      image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400",
-        "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400"
-      ],
-      salePrice: 299,
-      originalPrice: 399,
-      rating: 4.5,
-      reviewCount: 128,
-      badges: ["Handmade", "No Preservatives"],
-      category: "sweets",
-      brand: "neenus-natural",
-      variants: [
-        { weight: "225g", salePrice: 299, originalPrice: 399 },
-        { weight: "450g", salePrice: 549, originalPrice: 699 }
-      ],
-      shortDescription: "Authentic Mysore Pak made with pure ghee and traditional methods. Rich, melt-in-mouth texture with the perfect sweetness.",
-      dietary: ["handmade", "no-preservatives"],
-      bestseller: true
-    },
-    {
-      id: 2,
-      name: "Organic Coconut Laddu",
-      image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400"
-      ],
-      salePrice: 249,
-      originalPrice: 299,
-      rating: 4.7,
-      reviewCount: 95,
-      badges: ["Organic", "Vegan"],
-      category: "sweets",
-      brand: "neenus-natural",
-      variants: [
-        { weight: "200g", salePrice: 249, originalPrice: 299 },
-        { weight: "400g", salePrice: 449, originalPrice: 549 }
-      ],
-      shortDescription: "Soft and delicious coconut laddus made with organic coconut and jaggery. Perfect for festivals and celebrations.",
-      dietary: ["organic", "vegan", "no-preservatives"],
-      bestseller: false
-    },
-    {
-      id: 3,
-      name: "Spicy Mixture Namkeen",
-      image: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=400"
-      ],
-      salePrice: 189,
-      originalPrice: 229,
-      rating: 4.3,
-      reviewCount: 76,
-      badges: ["Handmade", "No Palm Oil"],
-      category: "savouries",
-      brand: "neenus-natural",
-      variants: [
-        { weight: "250g", salePrice: 189, originalPrice: 229 },
-        { weight: "500g", salePrice: 349, originalPrice: 429 }
-      ],
-      shortDescription: "Crispy and spicy mixture made with premium ingredients. Perfect tea-time snack with authentic flavors.",
-      dietary: ["handmade", "no-palm-oil"],
-      bestseller: true
-    },
-    {
-      id: 4,
-      name: "Mango Pickle Premium",
-      image: "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=400"
-      ],
-      salePrice: 329,
-      originalPrice: 399,
-      rating: 4.6,
-      reviewCount: 142,
-      badges: ["Handmade", "No Preservatives"],
-      category: "pickles",
-      brand: "traditional-tastes",
-      variants: [
-        { weight: "300g", salePrice: 329, originalPrice: 399 },
-        { weight: "500g", salePrice: 499, originalPrice: 599 }
-      ],
-      shortDescription: "Traditional mango pickle made with fresh mangoes and authentic spices. Aged to perfection for rich flavors.",
-      dietary: ["handmade", "no-preservatives"],
-      bestseller: false
-    },
-    {
-      id: 5,
-      name: "Festive Sweet Combo",
-      image: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=400"
-      ],
-      salePrice: 799,
-      originalPrice: 999,
-      rating: 4.8,
-      reviewCount: 89,
-      badges: ["Combo Pack", "Handmade"],
-      category: "combos",
-      brand: "neenus-natural",
-      variants: [
-        { weight: "1kg", salePrice: 799, originalPrice: 999 }
-      ],
-      shortDescription: "Perfect festive combo with assorted sweets including Mysore Pak, Coconut Laddu, and Kaju Katli.",
-      dietary: ["handmade", "no-preservatives"],
-      bestseller: true
-    },
-    {
-      id: 6,
-      name: "Rose Sherbet Concentrate",
-      image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400"
-      ],
-      salePrice: 149,
-      originalPrice: 199,
-      rating: 4.4,
-      reviewCount: 67,
-      badges: ["Natural", "No Artificial Colors"],
-      category: "summer-coolers",
-      brand: "organic-origins",
-      variants: [
-        { weight: "200ml", salePrice: 149, originalPrice: 199 },
-        { weight: "500ml", salePrice: 329, originalPrice: 429 }
-      ],
-      shortDescription: "Refreshing rose sherbet made with natural rose extracts. Perfect summer cooler with authentic taste.",
-      dietary: ["organic", "no-preservatives"],
-      bestseller: false
-    },
-    {
-      id: 7,
-      name: "Cold Pressed Coconut Oil",
-      image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400"
-      ],
-      salePrice: 449,
-      originalPrice: 549,
-      rating: 4.9,
-      reviewCount: 203,
-      badges: ["Cold Pressed", "Organic"],
-      category: "kitchen-essentials",
-      brand: "organic-origins",
-      variants: [
-        { weight: "500ml", salePrice: 449, originalPrice: 549 },
-        { weight: "1L", salePrice: 849, originalPrice: 999 }
-      ],
-      shortDescription: "Pure cold-pressed coconut oil extracted from fresh coconuts. Perfect for cooking and health benefits.",
-      dietary: ["organic", "no-preservatives"],
-      bestseller: true
-    },
-    {
-      id: 8,
-      name: "Artisan Chocolate Box",
-      image: "https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400",
-      gallery: [
-        "https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400"
-      ],
-      salePrice: 899,
-      originalPrice: 1199,
-      rating: 4.7,
-      reviewCount: 156,
-      badges: ["Gift Box", "Handmade"],
-      category: "gifts",
-      brand: "homemade-heritage",
-      variants: [
-        { weight: "300g", salePrice: 899, originalPrice: 1199 }
-      ],
-      shortDescription: "Premium artisan chocolate collection in beautiful gift packaging. Perfect for special occasions.",
-      dietary: ["handmade"],
-      bestseller: false
-    }
-  ];
-
   // Initialize products and apply URL filters
   useEffect(() => {
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setProducts(mockProducts);
-      setLoading(false);
-    }, 1000);
+    // Load products from JSON database
+    const allProducts = dataService.getProducts();
 
-    // Apply URL filters
-    const category = searchParams?.get('category');
-    const filter = searchParams?.get('filter');
-    
-    if (category) {
-      setFilters(prev => ({
-        ...prev,
-        categories: [category]
-      }));
+    // Filter by category if specified in URL
+    const urlParams = new URLSearchParams(location.search);
+    const categoryParam = urlParams.get('category');
+
+    let filteredProducts = allProducts;
+    if (categoryParam) {
+      filteredProducts = allProducts.filter(product => 
+        product.category === categoryParam || product.subcategory === categoryParam
+      );
     }
-    
+
+    setProducts(filteredProducts);
+    setLoading(false); // Set loading to false after data is loaded
+
+    // Apply URL filters for sorting
+    const filter = searchParams?.get('filter');
     if (filter === 'new-arrivals') {
       setCurrentSort('newest');
     }
-  }, [searchParams]);
+  }, [searchParams, location.search]); // Depend on location.search for category filtering
 
   // Filter and sort products
   useEffect(() => {

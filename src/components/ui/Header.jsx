@@ -6,15 +6,16 @@ import Input from './Input';
 import AnnouncementBar from './AnnouncementBar';
 import MegaMenu from './MegaMenu';
 import CartDrawer from './CartDrawer';
-
-const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [] }) => {
+import { useCart } from '../contexts/CartContext.jsx';
+const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
+  const { cartItems, getCartItemCount } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAnnouncementBar, setShowAnnouncementBar] = useState(true);
-  
+
   const location = useLocation();
 
   useEffect(() => {
@@ -31,8 +32,8 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
   };
 
   const navigationItems = [
-    { 
-      label: 'Shop', 
+    {
+      label: 'Shop',
       path: '/product-collection-grid',
       hasDropdown: true,
       onClick: () => setIsMegaMenuOpen(!isMegaMenuOpen)
@@ -43,7 +44,7 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
   return (
     <>
       {/* Announcement Bar */}
-      <AnnouncementBar 
+      <AnnouncementBar
         isVisible={showAnnouncementBar}
         onClose={() => setShowAnnouncementBar(false)}
       />
@@ -71,9 +72,9 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
                       className="flex items-center space-x-1 font-body font-medium text-foreground hover:text-primary transition-colors duration-200 py-2"
                     >
                       <span>{item?.label}</span>
-                      <Icon 
-                        name="ChevronDown" 
-                        size={16} 
+                      <Icon
+                        name="ChevronDown"
+                        size={16}
                         className={`transform transition-transform duration-200 ${isMegaMenuOpen ? 'rotate-180' : ''}`}
                       />
                     </button>
@@ -126,21 +127,41 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
                 aria-label="Shopping cart"
               >
                 <Icon name="ShoppingCart" size={20} />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-data font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                {getCartItemCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {getCartItemCount()}
                   </span>
                 )}
               </button>
 
               {/* User Account */}
-              <Link
-                to="/user-account-dashboard"
-                className="hidden sm:flex p-2 hover:bg-muted rounded-full transition-colors duration-200"
-                aria-label="User account"
-              >
-                <Icon name="User" size={20} />
-              </Link>
+              {/* User Actions */}
+              {isLoggedIn ? (
+                <div className="flex items-center space-x-2">
+                  <Link
+                    to="/admin-login"
+                    className="flex items-center space-x-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors duration-200"
+                  >
+                    <Icon name="Shield" size={16} />
+                    <span className="hidden sm:inline">Admin</span>
+                  </Link>
+                  <Link
+                    to="/user-account-dashboard"
+                    className="flex items-center space-x-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200"
+                  >
+                    <Icon name="User" size={16} />
+                    <span className="hidden sm:inline">Account</span>
+                  </Link>
+                </div>
+              ) : (
+                <Link
+                  to="/user-login"
+                  className="hidden sm:flex p-2 hover:bg-muted rounded-full transition-colors duration-200"
+                  aria-label="User login"
+                >
+                  <Icon name="User" size={20} />
+                </Link>
+              )}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -181,9 +202,9 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
                       className="flex items-center justify-between w-full font-body font-medium text-foreground hover:text-primary transition-colors duration-200 py-2"
                     >
                       <span>{item?.label}</span>
-                      <Icon 
-                        name="ChevronDown" 
-                        size={16} 
+                      <Icon
+                        name="ChevronDown"
+                        size={16}
                         className={`transform transition-transform duration-200 ${isMegaMenuOpen ? 'rotate-180' : ''}`}
                       />
                     </button>
@@ -197,7 +218,7 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
                   )}
                 </div>
               ))}
-              
+
               {/* Mobile-only links */}
               <Link
                 to="/user-account-dashboard"
@@ -211,9 +232,9 @@ const Header = ({ cartItemCount = 0, isLoggedIn = false, onSearch, cartItems = [
         )}
 
         {/* Mega Menu */}
-        <MegaMenu 
-          isOpen={isMegaMenuOpen} 
-          onClose={() => setIsMegaMenuOpen(false)} 
+        <MegaMenu
+          isOpen={isMegaMenuOpen}
+          onClose={() => setIsMegaMenuOpen(false)}
         />
       </header>
       {/* Cart Drawer */}

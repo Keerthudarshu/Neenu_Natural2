@@ -361,9 +361,7 @@ const UserAccountDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        cartItemCount={cartItems?.length}
         isLoggedIn={true}
-        cartItems={cartItems}
         onSearch={(query) => console.log('Search:', query)}
       />
       <div className="container mx-auto px-4 py-8">

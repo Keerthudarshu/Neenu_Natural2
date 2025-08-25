@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { sendOrderToWhatsApp } from '../../utils/whatsapp';
+import dataService from '../../services/dataService';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import CheckoutProgress from './components/CheckoutProgress';
@@ -14,6 +18,8 @@ import Icon from '../../components/AppIcon';
 
 const CheckoutProcess = () => {
   const navigate = useNavigate();
+  const { cartItems, clearCart } = useCart();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSummaryExpanded, setOrderSummaryExpanded] = useState(false);
@@ -24,39 +30,8 @@ const CheckoutProcess = () => {
   const [deliveryData, setDeliveryData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
 
-  // Mock cart data
-  const mockCartItems = [
-    {
-      id: 1,
-      name: 'Organic Turmeric Powder',
-      variant: '250g',
-      price: 299,
-      originalPrice: 349,
-      quantity: 2,
-      image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=400&fit=crop'
-    },
-    {
-      id: 2,
-      name: 'Cold Pressed Coconut Oil',
-      variant: '500ml',
-      price: 450,
-      originalPrice: 500,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop'
-    },
-    {
-      id: 3,
-      name: 'Himalayan Pink Salt',
-      variant: '1kg',
-      price: 199,
-      originalPrice: 249,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1518843875459-f738682238a6?w=400&h=400&fit=crop'
-    }
-  ];
-
   // Calculate totals
-  const subtotal = mockCartItems?.reduce((sum, item) => sum + (item?.price * item?.quantity), 0);
+  const subtotal = cartItems?.reduce((sum, item) => sum + (item?.price * item?.quantity), 0);
   const shippingCost = deliveryData?.price || (subtotal >= 499 ? 0 : 49);
   const discountAmount = appliedCoupon === 'FLAT10' && subtotal >= 1499 ? subtotal * 0.1 : 0;
   const total = subtotal + shippingCost - discountAmount;
@@ -103,16 +78,49 @@ const CheckoutProcess = () => {
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
     
-    // Simulate order processing
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock order success
-      const orderId = `NN${Date.now()?.toString()?.slice(-6)}`;
+      const orderId = `NN${Date.now().toString().slice(-6)}`;
       
-      // Navigate to success page or show success message
-      alert(`Order placed successfully! Order ID: ${orderId}\n\nYou will receive a confirmation email shortly.`);
-      navigate('/user-account-dashboard');
+      // Create order data
+      const orderData = {
+        orderId,
+        userId: user?.id,
+        items: cartItems.map(item => ({
+          productId: item.id,
+          name: item.name,
+          variant: item.variant || item.weight,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        customerInfo: {
+          name: shippingData?.name || user?.name,
+          email: user?.email,
+          phone: shippingData?.phone || user?.phone
+        },
+        shippingAddress: shippingData,
+        deliveryOption: deliveryData,
+        paymentMethod: paymentData?.method,
+        subtotal,
+        shipping: shippingCost,
+        discount: discountAmount,
+        total,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      // Store order in database
+      const savedOrder = dataService.addOrder(orderData);
+      
+      // Send order to WhatsApp
+      sendOrderToWhatsApp(orderData);
+      
+      // Clear cart
+      clearCart();
+      
+      alert(`Order placed successfully! Order ID: ${orderId}\n\nOrder details have been sent to WhatsApp and you will receive a confirmation call shortly.`);
+      navigate('/user-account-dashboard?section=orders');
       
     } catch (error) {
       console.error('Order placement failed:', error);
@@ -170,7 +178,7 @@ const CheckoutProcess = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header cartItemCount={mockCartItems?.length} />
+      <Header />
       <main className="container mx-auto px-4 py-6">
         <Breadcrumb customItems={breadcrumbItems} />
         
@@ -189,7 +197,7 @@ const CheckoutProcess = () => {
           {orderSummaryExpanded && (
             <div className="mt-4">
               <OrderSummary
-                cartItems={mockCartItems}
+                cartItems={cartItems}
                 subtotal={subtotal}
                 shipping={shippingCost}
                 discount={discountAmount}
@@ -211,7 +219,7 @@ const CheckoutProcess = () => {
           {/* Sidebar */}
           <div className="hidden lg:block space-y-6">
             <OrderSummary
-              cartItems={mockCartItems}
+              cartItems={cartItems}
               subtotal={subtotal}
               shipping={shippingCost}
               discount={discountAmount}

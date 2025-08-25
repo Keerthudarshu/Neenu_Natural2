@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
@@ -12,62 +13,19 @@ import SavedItems from './components/SavedItems';
 import Button from '../../components/ui/Button';
 
 const ShoppingCart = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [savedItems, setSavedItems] = useState([]);
+  const { 
+    cartItems, 
+    savedItems, 
+    updateQuantity, 
+    removeFromCart, 
+    saveForLater, 
+    moveToCart, 
+    removeFromSaved,
+    addToCart
+  } = useCart();
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [pincode, setPincode] = useState('');
   const [shippingLocation, setShippingLocation] = useState('');
-
-  // Mock cart data
-  useEffect(() => {
-    const mockCartItems = [
-      {
-        id: 1,
-        name: 'Organic Turmeric Powder',
-        price: 149,
-        originalPrice: 199,
-        image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=300&h=300&fit=crop',
-        variant: '250g',
-        quantity: 2,
-        badges: ['Organic', 'Pure']
-      },
-      {
-        id: 2,
-        name: 'Homemade Mango Pickle',
-        price: 299,
-        originalPrice: 349,
-        image: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=300&h=300&fit=crop',
-        variant: '500g',
-        quantity: 1,
-        badges: ['Handmade', 'Traditional']
-      },
-      {
-        id: 3,
-        name: 'Cold Pressed Coconut Oil',
-        price: 399,
-        originalPrice: 499,
-        image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&h=300&fit=crop',
-        variant: '500ml',
-        quantity: 1,
-        badges: ['Cold Pressed', 'Pure']
-      }
-    ];
-
-    const mockSavedItems = [
-      {
-        id: 4,
-        name: 'Premium Basmati Rice',
-        price: 299,
-        originalPrice: 349,
-        image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&h=300&fit=crop',
-        variant: '1kg',
-        badges: ['Premium', 'Aged']
-      }
-    ];
-
-    setCartItems(mockCartItems);
-    setSavedItems(mockSavedItems);
-  }, []);
 
   // Calculate totals
   const subtotal = cartItems?.reduce((sum, item) => sum + (item?.price * item?.quantity), 0);
@@ -88,32 +46,23 @@ const ShoppingCart = () => {
   const total = discountedSubtotal + shipping;
 
   const handleUpdateQuantity = (itemId, newQuantity) => {
-    setCartItems(items =>
-      items?.map(item =>
-        item?.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+    updateQuantity(itemId, newQuantity);
   };
 
   const handleRemoveItem = (itemId) => {
-    setCartItems(items => items?.filter(item => item?.id !== itemId));
+    removeFromCart(itemId);
   };
 
   const handleSaveForLater = (itemId) => {
-    const item = cartItems?.find(item => item?.id === itemId);
-    if (item) {
-      setSavedItems(prev => [...prev, { ...item, quantity: 1 }]);
-      handleRemoveItem(itemId);
-    }
+    saveForLater(itemId);
   };
 
   const handleMoveToCart = (item) => {
-    setCartItems(prev => [...prev, { ...item, quantity: 1 }]);
-    setSavedItems(prev => prev?.filter(saved => saved?.id !== item?.id));
+    moveToCart(item);
   };
 
   const handleRemoveFromSaved = (itemId) => {
-    setSavedItems(items => items?.filter(item => item?.id !== itemId));
+    removeFromSaved(itemId);
   };
 
   const handleApplyCoupon = (couponCode) => {
@@ -158,12 +107,7 @@ const ShoppingCart = () => {
   };
 
   const handleAddToCart = (product) => {
-    const existingItem = cartItems?.find(item => item?.id === product?.id);
-    if (existingItem) {
-      handleUpdateQuantity(product?.id, existingItem?.quantity + 1);
-    } else {
-      setCartItems(prev => [...prev, product]);
-    }
+    addToCart(product, 1);
   };
 
   const breadcrumbItems = [
