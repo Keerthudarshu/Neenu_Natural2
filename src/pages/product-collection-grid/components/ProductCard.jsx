@@ -46,7 +46,7 @@ const ProductCard = ({
     return stars;
   };
 
-  const currentPrice = selectedVariant?.salePrice || product?.salePrice;
+  const currentPrice = selectedVariant?.salePrice || product?.salePrice || product?.price;
   const originalPrice = selectedVariant?.originalPrice || product?.originalPrice;
   const savings = calculateSavings(originalPrice, currentPrice);
 
@@ -156,17 +156,17 @@ const ProductCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="font-data font-bold text-lg text-foreground">
-              ₹{currentPrice}
+              ₹{currentPrice?.toFixed(2) || '0.00'}
             </span>
             {originalPrice && originalPrice > currentPrice && (
               <span className="font-data text-sm text-muted-foreground line-through">
-                ₹{originalPrice}
+                ₹{originalPrice?.toFixed(2)}
               </span>
             )}
           </div>
           {savings > 0 && (
             <p className="font-caption text-xs text-success">
-              You save ₹{originalPrice - currentPrice}
+              You save ₹{(originalPrice - currentPrice)?.toFixed(2)}
             </p>
           )}
         </div>

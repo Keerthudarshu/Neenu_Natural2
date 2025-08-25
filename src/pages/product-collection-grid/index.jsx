@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import FilterSidebar from './components/FilterSidebar';
@@ -14,6 +15,7 @@ import dataService from '../../services/dataService';
 const ProductCollectionGrid = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { addToCart, getCartItemCount, cartItems } = useCart();
 
   // State management
   const [products, setProducts] = useState([]);
@@ -23,7 +25,6 @@ const ProductCollectionGrid = () => {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [currentSort, setCurrentSort] = useState('best-selling');
-  const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
@@ -167,30 +168,21 @@ const ProductCollectionGrid = () => {
   };
 
   const handleAddToCart = (product, variant = null, quantity = 1) => {
-    const cartItem = {
-      id: `${product?.id}-${variant?.weight || 'default'}`,
-      productId: product?.id,
+    const productToAdd = {
+      id: product?.id,
       name: product?.name,
       image: product?.image,
       price: variant?.salePrice || product?.salePrice,
+      originalPrice: variant?.originalPrice || product?.originalPrice,
       variant: variant?.weight || 'Default',
-      quantity: quantity
+      category: product?.category,
+      brand: product?.brand
     };
 
-    setCartItems(prev => {
-      const existingItem = prev?.find(item => item?.id === cartItem?.id);
-      if (existingItem) {
-        return prev?.map(item =>
-          item?.id === cartItem?.id
-            ? { ...item, quantity: item?.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, cartItem];
-    });
-
-    // Show success feedback (could be a toast notification)
-    console.log('Added to cart:', cartItem);
+    addToCart(productToAdd, quantity);
+    
+    // Show success feedback
+    console.log('Added to cart:', productToAdd);
   };
 
   const handleAddToWishlist = (productId) => {
@@ -212,7 +204,7 @@ const ProductCollectionGrid = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        cartItemCount={cartItems?.reduce((sum, item) => sum + item?.quantity, 0)}
+        cartItemCount={getCartItemCount()}
         cartItems={cartItems}
         onSearch={(query) => console.log('Search:', query)}
       />

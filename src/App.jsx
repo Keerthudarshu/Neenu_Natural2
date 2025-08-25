@@ -21,10 +21,10 @@ import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <div className="App">
-          <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <div className="App">
             <ErrorBoundary>
               <ScrollToTop />
               <Routes>
@@ -44,10 +44,10 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </ErrorBoundary>
-          </BrowserRouter>
-        </div>
-      </CartProvider>
-    </AuthProvider>
+          </div>
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

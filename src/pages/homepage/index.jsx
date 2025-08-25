@@ -7,8 +7,10 @@ import BestsellersCarousel from './components/BestsellersCarousel';
 import NewsletterSection from './components/NewsletterSection';
 import Footer from './components/Footer';
 
+import { useCart } from '../../contexts/CartContext';
+
 const Homepage = () => {
-  const [cartItems, setCartItems] = useState([]);
+  const { addToCart, getCartItemCount, cartItems } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Mock cart data for demonstration
@@ -35,18 +37,7 @@ const Homepage = () => {
   }, []);
 
   const handleAddToCart = (product) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems?.find(item => item?.id === product?.id);
-      if (existingItem) {
-        return prevItems?.map(item =>
-          item?.id === product?.id
-            ? { ...item, quantity: item?.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevItems, { ...product, quantity: 1 }];
-      }
-    });
+    addToCart(product, 1);
   };
 
   const handleSearch = (query) => {
@@ -54,8 +45,6 @@ const Homepage = () => {
     // Navigate to product collection with search query
     window.location.href = `/product-collection-grid?search=${encodeURIComponent(query)}`;
   };
-
-  const cartItemCount = cartItems?.reduce((total, item) => total + item?.quantity, 0);
 
   return (
     <>
@@ -79,7 +68,7 @@ const Homepage = () => {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <Header
-          cartItemCount={cartItemCount}
+          cartItemCount={getCartItemCount()}
           isLoggedIn={false}
           onSearch={handleSearch}
           cartItems={cartItems}
