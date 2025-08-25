@@ -24,7 +24,9 @@ const CheckoutProcess = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSummaryExpanded, setOrderSummaryExpanded] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+
   // Form data states
   const [shippingData, setShippingData] = useState(null);
   const [deliveryData, setDeliveryData] = useState(null);
@@ -42,6 +44,28 @@ const CheckoutProcess = () => {
       setAppliedCoupon('FLAT10');
     }
   }, [subtotal, appliedCoupon]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/user-auth');
+    }
+
+    // Get current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log('Location access denied:', error);
+        }
+      );
+    }
+  }, [user, navigate]);
+
 
   const breadcrumbItems = [
     { label: 'Home', path: '/homepage' },
@@ -77,51 +101,101 @@ const CheckoutProcess = () => {
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const orderId = `NN${Date.now().toString().slice(-6)}`;
-      
+
       // Create order data
       const orderData = {
-        orderId,
         userId: user?.id,
-        items: cartItems.map(item => ({
-          productId: item.id,
-          name: item.name,
-          variant: item.variant || item.weight,
-          price: item.price,
-          quantity: item.quantity
+        customerName: user?.name || shippingData?.firstName + ' ' + shippingData?.lastName,
+        customerEmail: user?.email || shippingData?.email,
+        customerPhone: user?.phone || shippingData?.phone,
+        items: cartItems?.map(item => ({
+          productId: item?.productId || item?.id,
+          name: item?.name,
+          variant: item?.variant,
+          quantity: item?.quantity,
+          price: item?.price,
+          total: (item?.price * item?.quantity)
         })),
-        customerInfo: {
-          name: shippingData?.name || user?.name,
-          email: user?.email,
-          phone: shippingData?.phone || user?.phone
+        shippingAddress: {
+          firstName: shippingData?.firstName || user?.firstName,
+          lastName: shippingData?.lastName || user?.lastName,
+          email: shippingData?.email || user?.email,
+          phone: shippingData?.phone || user?.phone,
+          address: shippingData?.address,
+          apartment: shippingData?.apartment,
+          city: shippingData?.city,
+          state: shippingData?.state,
+          pincode: shippingData?.pincode,
+          country: shippingData?.country || 'India'
         },
-        shippingAddress: shippingData,
-        deliveryOption: deliveryData,
+        billingAddress: shippingData, // Assuming billing address is same as shipping for now
+        currentLocation,
         paymentMethod: paymentData?.method,
-        subtotal,
+        subtotal: subtotal,
         shipping: shippingCost,
         discount: discountAmount,
-        total,
+        total: total,
+        appliedCoupon,
         status: 'pending',
         createdAt: new Date().toISOString()
       };
-      
+
       // Store order in database
-      const savedOrder = dataService.addOrder(orderData);
-      
-      // Send order to WhatsApp
-      sendOrderToWhatsApp(orderData);
-      
+      const savedOrder = await dataService.addOrder(orderData);
+
+
+      // Send WhatsApp message
+      const customerName = orderData.customerName || 'Unknown Customer';
+      const customerPhone = orderData.customerPhone || 'Not provided';
+      const customerEmail = orderData.customerEmail || 'Not provided';
+      const locationInfo = currentLocation ? `Location: ${currentLocation.latitude}, ${currentLocation.longitude}` : 'Location not available';
+
+      const orderDetails = `NEW ORDER RECEIVED
+
+Order ID: NN${Math.floor(Math.random() * 900000) + 100000}
+Customer: ${customerName}
+Phone: ${customerPhone}
+Email: ${customerEmail}
+
+Items Ordered:
+${cartItems?.map((item, index) => `${index + 1}. ${item?.name}
+   Qty: ${item?.quantity} x ₹${item?.price?.toFixed(2)} = ₹${(item?.price * item?.quantity)?.toFixed(2)}`).join('\n\n')}
+
+Shipping Address:
+${orderData.shippingAddress?.firstName} ${orderData.shippingAddress?.lastName}
+${orderData.shippingAddress?.address}
+${orderData.shippingAddress?.apartment || ''}
+${orderData.shippingAddress?.city}, ${orderData.shippingAddress?.state} - ${orderData.shippingAddress?.pincode}
+Phone: ${orderData.shippingAddress?.phone}
+
+${locationInfo}
+
+Payment Method: ${paymentData?.method}
+
+Order Summary:
+Subtotal: ₹${subtotal?.toFixed(2)}
+Shipping: ₹${shippingCost?.toFixed(2)}
+${discountAmount > 0 ? `Discount: -₹${discountAmount?.toFixed(2)}` : ''}
+Total: ₹${total?.toFixed(2)}
+
+Order Time: ${new Date().toLocaleString('en-IN')}`;
+
+      const phone = '917892783668'; // Replace with your WhatsApp number
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(orderDetails)}`;
+      window.open(whatsappUrl, '_blank');
+
+
       // Clear cart
       clearCart();
-      
+
       alert(`Order placed successfully! Order ID: ${orderId}\n\nOrder details have been sent to WhatsApp and you will receive a confirmation call shortly.`);
       navigate('/user-account-dashboard?section=orders');
-      
+
     } catch (error) {
       console.error('Order placement failed:', error);
       alert('Failed to place order. Please try again.');
@@ -157,6 +231,8 @@ const CheckoutProcess = () => {
             onNext={handleStepNext}
             onBack={handleStepBack}
             orderTotal={total}
+            paymentMethod={paymentData?.method}
+            setPaymentMethod={setPaymentData}
           />
         );
       case 4:
@@ -166,7 +242,7 @@ const CheckoutProcess = () => {
             onPlaceOrder={handlePlaceOrder}
             shippingAddress={shippingData}
             deliveryOption={deliveryData}
-            paymentMethod={paymentData}
+            paymentMethod={paymentData?.method}
             orderTotal={total}
             isProcessing={isProcessing}
           />
@@ -181,7 +257,7 @@ const CheckoutProcess = () => {
       <Header />
       <main className="container mx-auto px-4 py-6">
         <Breadcrumb customItems={breadcrumbItems} />
-        
+
         {/* Mobile Order Summary Toggle */}
         <div className="lg:hidden mb-6">
           <Button
@@ -193,7 +269,7 @@ const CheckoutProcess = () => {
           >
             {orderSummaryExpanded ? 'Hide' : 'Show'} order summary (₹{total?.toFixed(2)})
           </Button>
-          
+
           {orderSummaryExpanded && (
             <div className="mt-4">
               <OrderSummary
@@ -227,7 +303,7 @@ const CheckoutProcess = () => {
               onApplyCoupon={handleApplyCoupon}
               appliedCoupon={appliedCoupon}
             />
-            
+
             <TrustSignals />
           </div>
         </div>

@@ -50,6 +50,45 @@ const ProductCard = ({
   const originalPrice = selectedVariant?.originalPrice || product?.originalPrice;
   const savings = calculateSavings(originalPrice, currentPrice);
 
+  // Handle Add to Cart for products with variants
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    const cartItem = {
+      id: `${product.id}-default`,
+      productId: product.id,
+      name: product.name,
+      price: product.salePrice || product.price,
+      originalPrice: product.originalPrice || product.price,
+      image: product.image,
+      variant: 'Default',
+      category: product.category,
+      brand: product.brand
+    };
+    onAddToCart(cartItem, 1); // Assuming addToCart is passed as a prop
+    console.log('Added to cart:', cartItem);
+  };
+
+  // Handle Add to Cart for products with variants
+  const handleAddToCartWithVariant = (e) => {
+    e.stopPropagation();
+    if (!selectedVariant) return; // Ensure a variant is selected
+
+    const cartItem = {
+      id: `${product.id}-${selectedVariant.id}`, // Unique ID for each variant
+      productId: product.id,
+      name: product.name,
+      price: selectedVariant.salePrice || selectedVariant.price,
+      originalPrice: selectedVariant.originalPrice || selectedVariant.price,
+      image: product.image, // Consider if variants have different images
+      variant: selectedVariant.weight, // Displaying weight as variant
+      category: product.category,
+      brand: product.brand
+    };
+    onAddToCart(cartItem, 1); // Assuming addToCart is passed as a prop
+    console.log('Added to cart:', cartItem);
+  };
+
+
   return (
     <div className="group bg-card rounded-lg border border-border hover:shadow-warm-md transition-all duration-300 overflow-hidden">
       {/* Product Image */}
@@ -64,7 +103,7 @@ const ProductCard = ({
             onLoad={() => setIsImageLoading(false)}
           />
         </Link>
-        
+
         {/* Loading Skeleton */}
         {isImageLoading && (
           <div className="absolute inset-0 bg-muted animate-pulse" />
@@ -89,7 +128,10 @@ const ProductCard = ({
 
         {/* Wishlist Button */}
         <button
-          onClick={() => onAddToWishlist(product?.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToWishlist(product?.id);
+          }}
           className="absolute top-2 right-2 p-2 bg-card/80 backdrop-blur-sm rounded-full hover:bg-card transition-colors duration-200 opacity-0 group-hover:opacity-100"
         >
           <Icon 
@@ -156,12 +198,17 @@ const ProductCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="font-data font-bold text-lg text-foreground">
-              ₹{currentPrice?.toFixed(2) || '0.00'}
+              ₹{(selectedVariant?.salePrice || product?.salePrice || product?.price)?.toFixed(2) || '0.00'}
             </span>
             {originalPrice && originalPrice > currentPrice && (
-              <span className="font-data text-sm text-muted-foreground line-through">
-                ₹{originalPrice?.toFixed(2)}
-              </span>
+              <>
+                <span className="font-data text-sm text-muted-foreground line-through">
+                  ₹{originalPrice?.toFixed(2)}
+                </span>
+                <span className="font-caption text-xs font-medium text-success bg-success/10 px-2 py-1 rounded">
+                  {Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% OFF
+                </span>
+              </>
             )}
           </div>
           {savings > 0 && (
@@ -175,7 +222,7 @@ const ProductCard = ({
         <Button
           variant="default"
           fullWidth
-          onClick={() => onAddToCart(product, selectedVariant)}
+          onClick={selectedVariant ? handleAddToCartWithVariant : handleAddToCart}
           iconName="ShoppingCart"
           iconPosition="left"
           iconSize={16}

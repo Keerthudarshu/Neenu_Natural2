@@ -40,10 +40,11 @@ const Homepage = () => {
 
   const handleAddToCart = (product) => {
     const cartItem = {
-      id: product.id,
+      id: `${product.id}-default`,
+      productId: product.id,
       name: product.name,
-      price: product.salePrice,
-      originalPrice: product.originalPrice,
+      price: product.salePrice || product.price,
+      originalPrice: product.originalPrice || product.price,
       image: product.image,
       variant: 'Default',
       category: product.category,
