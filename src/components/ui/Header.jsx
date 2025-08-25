@@ -6,7 +6,7 @@ import Input from './Input';
 import AnnouncementBar from './AnnouncementBar';
 import MegaMenu from './MegaMenu';
 import CartDrawer from './CartDrawer';
-import { useCart } from '../contexts/CartContext.jsx';
+import { useCart } from '../../contexts/CartContext.jsx';
 const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
   const { cartItems, getCartItemCount } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
