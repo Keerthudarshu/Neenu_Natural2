@@ -500,7 +500,62 @@ const categories = [
 // Simulate API delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Mock users database
+const users = [
+  {
+    id: 1,
+    name: 'Admin User',
+    email: 'admin@neenu.com',
+    password: 'admin123', // In real app, this would be hashed
+    role: 'admin',
+    memberSince: '2024-01-01',
+    totalOrders: 0,
+    totalSpent: 0,
+    loyaltyPoints: 0,
+    totalSaved: 0
+  },
+  {
+    id: 2,
+    name: 'John Doe',
+    email: 'john@example.com',
+    password: 'password123',
+    role: 'customer',
+    memberSince: '2024-02-15',
+    totalOrders: 5,
+    totalSpent: 2450,
+    loyaltyPoints: 245,
+    totalSaved: 150
+  }
+];
+
 const dataService = {
+  // Authentication methods
+  authenticate(emailOrUsername, password) {
+    const user = users.find(u => 
+      (u.email === emailOrUsername || u.username === emailOrUsername) && 
+      u.password === password
+    );
+    return user || null;
+  },
+
+  // User management
+  getUser(id) {
+    return users.find(u => u.id === parseInt(id));
+  },
+
+  getUserByEmail(email) {
+    return users.find(u => u.email === email);
+  },
+
+  addUser(userData) {
+    const newUser = {
+      ...userData,
+      id: users.length + 1
+    };
+    users.push(newUser);
+    return newUser;
+  },
+
   // Get all products
   async getProducts(filters = {}) {
     await delay(500);
