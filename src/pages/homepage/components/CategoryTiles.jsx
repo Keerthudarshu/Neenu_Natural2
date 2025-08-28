@@ -7,63 +7,104 @@ const CategoryTiles = () => {
   const categories = [
     {
       id: 1,
-      name: "Sweets",
-      description: "Traditional Indian sweets made with pure ingredients",
-      image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=sweets",
-      productCount: "25+ Products",
+      name: "Unpolished Pulses, Dals & Rice",
+      description: "Chemical-free rice varieties and authentic pulses",
+      image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=unpolished-pulses-dals-rice",
+      productCount: "15+ Products",
       featured: true
     },
     {
       id: 2,
-      name: "Savouries",
-      description: "Crispy and flavorful snacks for every occasion",
-      image: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=savouries",
-      productCount: "18+ Products"
+      name: "Poha / Aval",
+      description: "Traditional flattened rice varieties",
+      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=poha-aval",
+      productCount: "3+ Products"
     },
     {
       id: 3,
-      name: "Pickles",
-      description: "Authentic homemade pickles with traditional recipes",
-      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=pickles",
-      productCount: "12+ Products"
+      name: "Sugars & Honey",
+      description: "Natural sweeteners and organic honey",
+      image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=sugars-honey",
+      productCount: "6+ Products"
     },
     {
       id: 4,
-      name: "Combos",
-      description: "Curated gift sets and product combinations",
-      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=combos",
-      productCount: "8+ Products",
-      badge: "Popular"
+      name: "Haircare Products",
+      description: "Natural hair care solutions and oils",
+      image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=haircare-products",
+      productCount: "12+ Products",
+      badge: "Natural"
     },
     {
       id: 5,
-      name: "Summer Coolers",
-      description: "Refreshing drinks and cooling treats",
-      image: "https://images.unsplash.com/photo-1546173159-315724a31696?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=summer-coolers",
-      productCount: "10+ Products",
-      seasonal: true
+      name: "Skincare Products",
+      description: "Herbal skincare and beauty products",
+      image: "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=skincare-products",
+      productCount: "8+ Products"
     },
     {
       id: 6,
-      name: "Kitchen Essentials",
-      description: "Premium spices, oils, and cooking ingredients",
-      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=kitchen-essentials",
-      productCount: "30+ Products"
+      name: "Millet Items",
+      description: "Nutritious millet-based food products",
+      image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=millet-items",
+      productCount: "10+ Products",
+      badge: "Healthy"
     },
     {
       id: 7,
-      name: "Gifts",
-      description: "Perfect gift hampers for your loved ones",
-      image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=300&fit=crop",
-      link: "/product-collection-grid?category=gifts",
-      productCount: "15+ Products",
-      badge: "New"
+      name: "Powders",
+      description: "Freshly ground spice powders and mixes",
+      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=powders",
+      productCount: "10+ Products"
+    },
+    {
+      id: 8,
+      name: "Fries",
+      description: "Traditional dried and fried delicacies",
+      image: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=fries",
+      productCount: "7+ Products"
+    },
+    {
+      id: 9,
+      name: "Herbal Handmade Soaps",
+      description: "Natural handcrafted soaps with herbs",
+      image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=herbal-handmade-soaps",
+      productCount: "20+ Products",
+      featured: true
+    },
+    {
+      id: 10,
+      name: "Snacks",
+      description: "Healthy millet-based snacks and sweets",
+      image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=snacks",
+      productCount: "25+ Products",
+      badge: "Popular"
+    },
+    {
+      id: 11,
+      name: "Herbal Products",
+      description: "Traditional herbal remedies and health products",
+      image: "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=herbal-products",
+      productCount: "30+ Products"
+    },
+    {
+      id: 12,
+      name: "Herbal Powders",
+      description: "Natural herbal powders for health and wellness",
+      image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+      link: "/product-collection-grid?category=herbal-powders",
+      productCount: "25+ Products"
     }
   ];
 

@@ -141,26 +141,20 @@ class DataService {
 
   // Categories
   getCategories() {
-    const defaultCategories = [
-      { id: 'oils-ghee', name: 'Oils & Ghee' },
-      { id: 'spices-masalas', name: 'Spices & Masalas' },
-      { id: 'natural-sweeteners', name: 'Natural Sweeteners' },
-      { id: 'dairy-products', name: 'Dairy Products' },
-      { id: 'pickles-preserves', name: 'Pickles & Preserves' },
-      { id: 'sweets-desserts', name: 'Sweets & Desserts' }
+    return [
+      { id: 'unpolished-pulses-dals-rice', name: 'Unpolished Pulses, Dals & Rice' },
+      { id: 'poha-aval', name: 'Poha / Aval' },
+      { id: 'sugars-honey', name: 'Sugars & Honey' },
+      { id: 'haircare-products', name: 'Haircare Products' },
+      { id: 'skincare-products', name: 'Skincare Products' },
+      { id: 'millet-items', name: 'Millet Items' },
+      { id: 'powders', name: 'Powders' },
+      { id: 'fries', name: 'Fries' },
+      { id: 'herbal-handmade-soaps', name: 'Herbal Handmade Soaps' },
+      { id: 'snacks', name: 'Snacks' },
+      { id: 'herbal-products', name: 'Herbal Products' },
+      { id: 'herbal-powders', name: 'Herbal Powders' }
     ];
-    
-    // If categories in JSON are strings, convert them to objects
-    if (this.data.categories && Array.isArray(this.data.categories)) {
-      return this.data.categories.map(cat => {
-        if (typeof cat === 'string') {
-          return { id: cat.toLowerCase().replace(/\s+/g, '-'), name: cat };
-        }
-        return cat;
-      });
-    }
-    
-    return defaultCategories;
   }
 
   // Authentication

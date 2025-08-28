@@ -5,44 +5,40 @@ import Image from '../AppImage';
 const MegaMenu = ({ isOpen, onClose }) => {
   const categories = [
     {
-      title: 'Spices & Seasonings',
+      title: 'Food Items',
       items: [
-        { name: 'Whole Spices', path: '/product-collection-grid?category=whole-spices' },
-        { name: 'Ground Spices', path: '/product-collection-grid?category=ground-spices' },
-        { name: 'Spice Blends', path: '/product-collection-grid?category=spice-blends' },
-        { name: 'Organic Spices', path: '/product-collection-grid?category=organic-spices' }
+        { name: 'Unpolished Pulses, Dals & Rice', path: '/product-collection-grid?category=unpolished-pulses-dals-rice' },
+        { name: 'Poha / Aval', path: '/product-collection-grid?category=poha-aval' },
+        { name: 'Sugars & Honey', path: '/product-collection-grid?category=sugars-honey' },
+        { name: 'Millet Items', path: '/product-collection-grid?category=millet-items' }
+      ],
+      image: '/assets/images/category-food.jpg'
+    },
+    {
+      title: 'Spices & Powders',
+      items: [
+        { name: 'Powders', path: '/product-collection-grid?category=powders' },
+        { name: 'Herbal Powders', path: '/product-collection-grid?category=herbal-powders' },
+        { name: 'Fries', path: '/product-collection-grid?category=fries' }
       ],
       image: '/assets/images/category-spices.jpg'
     },
     {
-      title: 'Oils & Ghee',
+      title: 'Personal Care',
       items: [
-        { name: 'Cold Pressed Oils', path: '/product-collection-grid?category=cold-pressed-oils' },
-        { name: 'Coconut Oil', path: '/product-collection-grid?category=coconut-oil' },
-        { name: 'Pure Ghee', path: '/product-collection-grid?category=pure-ghee' },
-        { name: 'Sesame Oil', path: '/product-collection-grid?category=sesame-oil' }
+        { name: 'Haircare Products', path: '/product-collection-grid?category=haircare-products' },
+        { name: 'Skincare Products', path: '/product-collection-grid?category=skincare-products' },
+        { name: 'Herbal Handmade Soaps', path: '/product-collection-grid?category=herbal-handmade-soaps' }
       ],
-      image: '/assets/images/category-oils.jpg'
+      image: '/assets/images/category-personal-care.jpg'
     },
     {
-      title: 'Grains & Pulses',
+      title: 'Health & Wellness',
       items: [
-        { name: 'Organic Rice', path: '/product-collection-grid?category=organic-rice' },
-        { name: 'Millets', path: '/product-collection-grid?category=millets' },
-        { name: 'Lentils', path: '/product-collection-grid?category=lentils' },
-        { name: 'Quinoa', path: '/product-collection-grid?category=quinoa' }
+        { name: 'Herbal Products', path: '/product-collection-grid?category=herbal-products' },
+        { name: 'Snacks', path: '/product-collection-grid?category=snacks' }
       ],
-      image: '/assets/images/category-grains.jpg'
-    },
-    {
-      title: 'Snacks & Sweets',
-      items: [
-        { name: 'Healthy Snacks', path: '/product-collection-grid?category=healthy-snacks' },
-        { name: 'Traditional Sweets', path: '/product-collection-grid?category=traditional-sweets' },
-        { name: 'Dry Fruits', path: '/product-collection-grid?category=dry-fruits' },
-        { name: 'Nuts & Seeds', path: '/product-collection-grid?category=nuts-seeds' }
-      ],
-      image: '/assets/images/category-snacks.jpg'
+      image: '/assets/images/category-health.jpg'
     }
   ];
 

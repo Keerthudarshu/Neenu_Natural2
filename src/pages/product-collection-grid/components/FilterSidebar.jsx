@@ -42,12 +42,18 @@ const FilterSidebar = ({
   ];
 
   const categories = [
-    { id: 'sweets', label: 'Sweets', count: 34 },
-    { id: 'savouries', label: 'Savouries', count: 28 },
-    { id: 'pickles', label: 'Pickles', count: 19 },
-    { id: 'combos', label: 'Combos', count: 15 },
-    { id: 'summer-coolers', label: 'Summer Coolers', count: 12 },
-    { id: 'kitchen-essentials', label: 'Kitchen Essentials', count: 23 }
+    { id: 'unpolished-pulses-dals-rice', label: 'Unpolished Pulses, Dals & Rice', count: 15 },
+    { id: 'poha-aval', label: 'Poha / Aval', count: 3 },
+    { id: 'sugars-honey', label: 'Sugars & Honey', count: 6 },
+    { id: 'haircare-products', label: 'Haircare Products', count: 12 },
+    { id: 'skincare-products', label: 'Skincare Products', count: 8 },
+    { id: 'millet-items', label: 'Millet Items', count: 10 },
+    { id: 'powders', label: 'Powders', count: 10 },
+    { id: 'fries', label: 'Fries', count: 7 },
+    { id: 'herbal-handmade-soaps', label: 'Herbal Handmade Soaps', count: 20 },
+    { id: 'snacks', label: 'Snacks', count: 25 },
+    { id: 'herbal-products', label: 'Herbal Products', count: 30 },
+    { id: 'herbal-powders', label: 'Herbal Powders', count: 25 }
   ];
 
   const brands = [
