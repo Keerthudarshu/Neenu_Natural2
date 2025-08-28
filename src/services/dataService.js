@@ -1,4 +1,3 @@
-
 // Mock data service to simulate API calls
 const products = [
   // Unpolished Pulses, Dals & Rice
@@ -501,7 +500,7 @@ const categories = [
 // Simulate API delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const dataService = {
+const dataService = {
   // Get all products
   async getProducts(filters = {}) {
     await delay(500);
@@ -509,7 +508,7 @@ export const dataService = {
 
     // Filter by category
     if (filters.category) {
-      filteredProducts = filteredProducts.filter(product => 
+      filteredProducts = filteredProducts.filter(product =>
         product.category === filters.category
       );
     }
@@ -603,3 +602,5 @@ export const dataService = {
     return { data: related };
   }
 };
+
+export default dataService;
