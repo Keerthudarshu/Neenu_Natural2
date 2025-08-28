@@ -38,6 +38,7 @@ const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
       hasDropdown: true,
       onClick: () => setIsMegaMenuOpen(!isMegaMenuOpen)
     },
+    { label: 'Products', path: '/product-collection-grid' },
     { label: 'Account', path: '/user-account-dashboard' },
   ];
 
