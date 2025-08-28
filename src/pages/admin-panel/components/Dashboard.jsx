@@ -17,23 +17,33 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = () => {
-    const products = dataService.getProducts();
-    const users = dataService.getUsers();
-    const orders = dataService.getOrders();
+  const loadDashboardData = async () => {
+    try {
+      const [productsResponse, usersResponse, ordersResponse] = await Promise.all([
+        dataService.getProducts(),
+        dataService.getUsers ? dataService.getUsers() : Promise.resolve({ data: [] }),
+        dataService.getOrders ? dataService.getOrders() : Promise.resolve({ data: [] })
+      ]);
 
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-    const recentOrders = orders.slice(-5).reverse();
-    const lowStockProducts = products.filter(p => (p.stockQuantity || 0) < 10);
+      const products = productsResponse.data;
+      const users = usersResponse.data;
+      const orders = ordersResponse.data;
 
-    setStats({
-      totalProducts: products.length,
-      totalUsers: users.filter(u => u.role === 'customer').length,
-      totalOrders: orders.length,
-      totalRevenue,
-      recentOrders,
-      lowStockProducts
-    });
+      const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+      const recentOrders = orders.slice(-5).reverse();
+      const lowStockProducts = products.filter(p => (p.stockQuantity || 0) < 10);
+
+      setStats({
+        totalProducts: products.length,
+        totalUsers: users.filter(u => u.role === 'customer').length,
+        totalOrders: orders.length,
+        totalRevenue,
+        recentOrders,
+        lowStockProducts
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
   };
 
   const handleQuickRestockProduct = (productId) => {

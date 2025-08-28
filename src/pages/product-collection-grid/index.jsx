@@ -39,28 +39,39 @@ const ProductCollectionGrid = () => {
 
   // Initialize products and apply URL filters
   useEffect(() => {
-    // Load products from JSON database
-    const allProducts = dataService.getProducts();
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        // Load products from async service
+        const response = await dataService.getProducts();
+        const allProducts = response.data;
 
-    // Filter by category if specified in URL
-    const urlParams = new URLSearchParams(location.search);
-    const categoryParam = urlParams.get('category');
+        // Filter by category if specified in URL
+        const urlParams = new URLSearchParams(location.search);
+        const categoryParam = urlParams.get('category');
 
-    let filteredProducts = allProducts;
-    if (categoryParam) {
-      filteredProducts = allProducts.filter(product => 
-        product.category === categoryParam || product.subcategory === categoryParam
-      );
-    }
+        let filteredProducts = allProducts;
+        if (categoryParam) {
+          filteredProducts = allProducts.filter(product => 
+            product.category === categoryParam || product.subcategory === categoryParam
+          );
+        }
 
-    setProducts(filteredProducts);
-    setLoading(false); // Set loading to false after data is loaded
+        setProducts(filteredProducts);
+        
+        // Apply URL filters for sorting
+        const filter = searchParams?.get('filter');
+        if (filter === 'new-arrivals') {
+          setCurrentSort('newest');
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Apply URL filters for sorting
-    const filter = searchParams?.get('filter');
-    if (filter === 'new-arrivals') {
-      setCurrentSort('newest');
-    }
+    loadProducts();
   }, [searchParams, location.search]); // Depend on location.search for category filtering
 
   // Filter and sort products

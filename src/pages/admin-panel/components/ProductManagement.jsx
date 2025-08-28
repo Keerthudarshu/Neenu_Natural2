@@ -17,11 +17,16 @@ const ProductManagement = () => {
     loadProducts();
   }, []);
 
-  const loadProducts = () => {
-    setLoading(true);
-    const allProducts = dataService.getProducts();
-    setProducts(allProducts);
-    setLoading(false);
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await dataService.getProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredProducts = products.filter(product => {
@@ -54,7 +59,19 @@ const ProductManagement = () => {
     loadProducts();
   };
 
-  const categories = dataService.getCategories();
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await dataService.getCategories();
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
