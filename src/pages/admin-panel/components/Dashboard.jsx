@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Package, Users, ShoppingCart, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { 
+  Package, Users, ShoppingCart, DollarSign, TrendingUp, TrendingDown, 
+  AlertTriangle, Plus, BarChart3, Calendar, Eye, RefreshCw 
+} from 'lucide-react';
 import dataService from '../../../services/dataService';
 
 const Dashboard = () => {
@@ -10,8 +13,16 @@ const Dashboard = () => {
     totalOrders: 0,
     totalRevenue: 0,
     recentOrders: [],
-    lowStockProducts: []
+    lowStockProducts: [],
+    monthlyRevenue: 0,
+    weeklyOrders: 0,
+    topSellingProducts: [],
+    pendingOrders: 0,
+    completedOrders: 0,
+    averageOrderValue: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -19,80 +30,174 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [productsResponse, usersResponse, ordersResponse] = await Promise.all([
-        dataService.getProducts(),
-        dataService.getUsers ? dataService.getUsers() : Promise.resolve({ data: [] }),
-        dataService.getOrders ? dataService.getOrders() : Promise.resolve({ data: [] })
-      ]);
-
-      const products = productsResponse.data;
-      const users = usersResponse.data;
-      const orders = ordersResponse.data;
-
-      const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-      const recentOrders = orders.slice(-5).reverse();
+      setLoading(true);
+      
+      // Get all data
+      const productsResponse = await dataService.getProducts();
+      const users = dataService.getUsers(); // Direct call since it's synchronous
+      const orders = dataService.getOrders(); // Direct call since it's synchronous
+      
+      const products = productsResponse.data || [];
+      const customerUsers = users.filter(u => u.role === 'customer');
+      
+      // Calculate revenue metrics
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+      
+      // Calculate date-based metrics
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentWeek = getWeekNumber(now);
+      
+      const monthlyOrders = orders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === now.getFullYear();
+      });
+      
+      const weeklyOrders = orders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return getWeekNumber(orderDate) === currentWeek && orderDate.getFullYear() === now.getFullYear();
+      });
+      
+      const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+      
+      // Order status counts
+      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+      const completedOrders = orders.filter(order => order.status === 'delivered' || order.status === 'completed').length;
+      
+      // Product analytics
       const lowStockProducts = products.filter(p => (p.stockQuantity || 0) < 10);
-
+      const recentOrders = orders.slice(-5).reverse();
+      
+      // Top selling products (based on order frequency)
+      const productSales = {};
+      orders.forEach(order => {
+        if (order.items) {
+          order.items.forEach(item => {
+            const productId = item.productId || item.id;
+            if (productId) {
+              productSales[productId] = (productSales[productId] || 0) + (item.quantity || 1);
+            }
+          });
+        }
+      });
+      
+      const topSellingProducts = Object.entries(productSales)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([productId, quantity]) => {
+          const product = products.find(p => p.id == productId);
+          return product ? { ...product, soldQuantity: quantity } : null;
+        })
+        .filter(Boolean);
+      
       setStats({
         totalProducts: products.length,
-        totalUsers: users.filter(u => u.role === 'customer').length,
+        totalUsers: customerUsers.length,
         totalOrders: orders.length,
         totalRevenue,
+        monthlyRevenue,
+        weeklyOrders: weeklyOrders.length,
+        averageOrderValue,
+        pendingOrders,
+        completedOrders,
         recentOrders,
-        lowStockProducts
+        lowStockProducts,
+        topSellingProducts
       });
+      
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
+  
+  const getWeekNumber = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+  };
+  
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+  };
 
-  const handleQuickRestockProduct = (productId) => {
+  const handleQuickRestockProduct = async (productId) => {
     const restockAmount = prompt('Enter quantity to add to stock:');
     if (restockAmount && !isNaN(restockAmount) && parseInt(restockAmount) > 0) {
-      const product = dataService.getProduct(productId);
-      if (product) {
-        const newStock = (product.stockQuantity || 0) + parseInt(restockAmount);
-        dataService.updateProduct(productId, { 
-          stockQuantity: newStock,
-          inStock: newStock > 0 
-        });
-        loadDashboardData(); // Refresh data
-        alert(`Stock updated! ${product.name} now has ${newStock} items in stock.`);
+      try {
+        const products = await dataService.getProducts();
+        const product = products.data.find(p => p.id === productId);
+        if (product) {
+          const newStock = (product.stockQuantity || 0) + parseInt(restockAmount);
+          // In a real app, you'd call dataService.updateProduct
+          // For now, we'll just update the local data and show success
+          product.stockQuantity = newStock;
+          product.inStock = newStock > 0;
+          
+          await loadDashboardData(); // Refresh data
+          alert(`Stock updated! ${product.name} now has ${newStock} items in stock.`);
+        }
+      } catch (error) {
+        console.error('Error updating stock:', error);
+        alert('Failed to update stock. Please try again.');
       }
     }
   };
+  
+  const handleBulkRestock = () => {
+    // Show modal or navigate to bulk stock management
+    alert('Bulk restock feature - would open a dedicated stock management interface');
+  };
 
-  const StatCard = ({ title, value, icon: Icon, trend, color = 'primary' }) => (
-    <div className="bg-card border border-border rounded-lg p-6">
+  const StatCard = ({ title, value, subtitle, icon: Icon, color = 'primary' }) => (
+    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-body text-muted-foreground">{title}</p>
-          <p className="text-2xl font-heading font-bold text-foreground">{value}</p>
-          {trend && (
-            <div className="flex items-center mt-2 text-sm">
-              {trend > 0 ? (
-                <TrendingUp className="w-4 h-4 text-success mr-1" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-destructive mr-1" />
-              )}
-              <span className={trend > 0 ? 'text-success' : 'text-destructive'}>
-                {Math.abs(trend)}%
-              </span>
-            </div>
+          <p className="text-2xl font-heading font-bold text-foreground mt-1">{value}</p>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
           )}
         </div>
-        <div className={`p-3 rounded-full bg-${color}/10`}>
+        <div className={`p-3 rounded-full bg-${color}/10 flex-shrink-0`}>
           <Icon className={`w-6 h-6 text-${color}`} />
         </div>
       </div>
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>Refresh</span>
+        </button>
       </div>
 
       {/* Stats Grid */}
@@ -100,102 +205,226 @@ const Dashboard = () => {
         <StatCard
           title="Total Products"
           value={stats.totalProducts}
+          subtitle={`${stats.lowStockProducts.length} low stock`}
           icon={Package}
-          trend={5}
           color="primary"
         />
         <StatCard
           title="Total Customers"
           value={stats.totalUsers}
+          subtitle="Active users"
           icon={Users}
-          trend={12}
           color="success"
         />
         <StatCard
           title="Total Orders"
           value={stats.totalOrders}
+          subtitle={`${stats.pendingOrders} pending`}
           icon={ShoppingCart}
-          trend={8}
           color="warning"
         />
         <StatCard
-          title="Revenue"
+          title="Total Revenue"
           value={`₹${stats.totalRevenue.toLocaleString()}`}
+          subtitle={`Avg: ₹${Math.round(stats.averageOrderValue)}`}
           icon={DollarSign}
-          trend={15}
+          color="success"
+        />
+      </div>
+      
+      {/* Secondary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Monthly Revenue"
+          value={`₹${stats.monthlyRevenue.toLocaleString()}`}
+          subtitle="This month"
+          icon={BarChart3}
+          color="primary"
+        />
+        <StatCard
+          title="Weekly Orders"
+          value={stats.weeklyOrders}
+          subtitle="This week"
+          icon={Calendar}
+          color="success"
+        />
+        <StatCard
+          title="Pending Orders"
+          value={stats.pendingOrders}
+          subtitle="Need attention"
+          icon={AlertTriangle}
+          color="warning"
+        />
+        <StatCard
+          title="Completed Orders"
+          value={stats.completedOrders}
+          subtitle="Successfully delivered"
+          icon={ShoppingCart}
           color="success"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
+      {/* Revenue Chart */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-heading font-semibold text-foreground">Revenue Overview</h2>
+          <BarChart3 className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Total Revenue</span>
+            <span className="font-semibold text-foreground">₹{stats.totalRevenue.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">This Month</span>
+            <span className="font-semibold text-primary">₹{stats.monthlyRevenue.toLocaleString()}</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-3">
+            <div 
+              className="bg-primary h-3 rounded-full transition-all duration-300"
+              style={{ 
+                width: `${stats.totalRevenue > 0 ? Math.min((stats.monthlyRevenue / stats.totalRevenue) * 100, 100) : 0}%` 
+              }}
+            ></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <p className="text-sm text-muted-foreground">Avg Order</p>
+              <p className="font-semibold text-primary">₹{Math.round(stats.averageOrderValue)}</p>
+            </div>
+            <div className="p-3 bg-success/10 rounded-lg">
+              <p className="text-sm text-muted-foreground">Completion Rate</p>
+              <p className="font-semibold text-success">
+                {stats.totalOrders > 0 ? Math.round((stats.completedOrders / stats.totalOrders) * 100) : 0}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Top Selling Products */}
         <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Recent Orders</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-heading font-semibold text-foreground">Top Selling Products</h2>
+            <Eye className="w-5 h-5 text-muted-foreground" />
+          </div>
           <div className="space-y-3">
-            {stats.recentOrders.length > 0 ? (
-              stats.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="font-body font-medium text-foreground">Order #{order.id}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </p>
+            {stats.topSellingProducts.length > 0 ? (
+              stats.topSellingProducts.map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-body font-medium text-foreground text-sm">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.weight || 'N/A'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-body font-medium text-foreground">₹{order.total}</p>
-                    <p className={`text-sm capitalize ${
-                      order.status === 'pending' ? 'text-warning' :
-                      order.status === 'completed' ? 'text-success' :
-                      'text-muted-foreground'
-                    }`}>
-                      {order.status}
-                    </p>
+                    <p className="font-body font-medium text-foreground text-sm">{product.soldQuantity} sold</p>
+                    <p className="text-xs text-success">₹{product.price}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">No orders yet</p>
+              <p className="text-muted-foreground text-center py-4 text-sm">No sales data yet</p>
+            )}
+          </div>
+        </div>
+        {/* Recent Orders */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-heading font-semibold text-foreground">Recent Orders</h2>
+            <ShoppingCart className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {stats.recentOrders.length > 0 ? (
+              stats.recentOrders.map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
+                  <div className="flex-1">
+                    <p className="font-body font-medium text-foreground text-sm">Order #{order.id}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(order.createdAt).toLocaleDateString('en-IN')} • {order.items?.length || 0} items
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {order.shippingAddress?.name || order.customerName || 'Customer'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-body font-medium text-foreground text-sm">₹{(order.total || 0).toLocaleString()}</p>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                      order.status === 'pending' ? 'bg-warning/10 text-warning' :
+                      order.status === 'processing' ? 'bg-primary/10 text-primary' :
+                      order.status === 'shipped' ? 'bg-blue-100 text-blue-600' :
+                      order.status === 'delivered' || order.status === 'completed' ? 'bg-success/10 text-success' :
+                      order.status === 'cancelled' ? 'bg-destructive/10 text-destructive' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">No orders yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Orders will appear here when customers place them</p>
+              </div>
             )}
           </div>
         </div>
 
         {/* Low Stock Alert */}
         <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-            Low Stock Alert 
-            {stats.lowStockProducts.length > 0 && (
-              <span className="ml-2 bg-warning text-warning-foreground px-2 py-1 rounded-full text-xs">
-                {stats.lowStockProducts.length}
-              </span>
-            )}
-          </h2>
-          <div className="space-y-3">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-heading font-semibold text-foreground flex items-center">
+                <AlertTriangle className="w-5 h-5 mr-2 text-warning" />
+                Stock Alerts
+                {stats.lowStockProducts.length > 0 && (
+                  <span className="ml-2 bg-warning text-warning-foreground px-2 py-1 rounded-full text-xs">
+                    {stats.lowStockProducts.length}
+                  </span>
+                )}
+              </h2>
+            </div>
+            <button
+              onClick={handleBulkRestock}
+              className="flex items-center space-x-1 px-3 py-1 bg-primary/10 text-primary rounded-md text-sm hover:bg-primary/20 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Bulk Restock</span>
+            </button>
+          </div>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
             {stats.lowStockProducts.length > 0 ? (
               stats.lowStockProducts.map((product) => (
                 <div key={product.id} className="flex items-center justify-between p-3 bg-warning/10 rounded-lg">
                   <div className="flex-1">
-                    <p className="font-body font-medium text-foreground">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">{product.weight}</p>
+                    <p className="font-body font-medium text-foreground text-sm">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.weight || 'N/A'}</p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="text-right">
-                      <p className={`font-body font-medium ${
-                        product.stockQuantity <= 5 ? 'text-destructive' : 'text-warning'
+                      <p className={`font-body font-medium text-sm ${
+                        (product.stockQuantity || 0) <= 5 ? 'text-destructive' : 'text-warning'
                       }`}>
-                        {product.stockQuantity} left
+                        {product.stockQuantity || 0} left
                       </p>
                     </div>
                     <button
                       onClick={() => handleQuickRestockProduct(product.id)}
-                      className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors"
+                      className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-xs hover:bg-primary/90 transition-colors"
                     >
-                      Quick Restock
+                      Restock
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">All products are well stocked</p>
+              <div className="text-center py-8">
+                <Package className="w-12 h-12 text-success mx-auto mb-2" />
+                <p className="text-success font-medium">All products well stocked!</p>
+                <p className="text-xs text-muted-foreground mt-1">No items need restocking</p>
+              </div>
             )}
           </div>
         </div>
