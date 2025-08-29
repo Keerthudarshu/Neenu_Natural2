@@ -17,12 +17,33 @@ const AdminPanel = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check both localStorage sources for admin session
     const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-    if (!adminUser || adminUser.role !== 'admin') {
+    const sessionData = localStorage.getItem('neenu_auth_session');
+    
+    let validAdmin = null;
+    
+    if (adminUser && adminUser.role === 'admin') {
+      validAdmin = adminUser;
+    } else if (sessionData) {
+      const session = JSON.parse(sessionData);
+      const user = dataService.getUser(session.userId);
+      if (user && user.role === 'admin') {
+        validAdmin = user;
+        // Sync adminUser in localStorage
+        localStorage.setItem('adminUser', JSON.stringify(user));
+      }
+    }
+    
+    if (!validAdmin) {
+      // Clear any invalid sessions
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('neenu_auth_session');
       navigate('/admin-login');
       return;
     }
-    setCurrentUser(adminUser);
+    
+    setCurrentUser(validAdmin);
   }, [navigate]);
 
   const renderActiveSection = () => {

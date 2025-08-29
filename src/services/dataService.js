@@ -514,8 +514,32 @@ let users = databaseData.users.map(user => ({
   totalSaved: user.totalSaved || 0
 }));
 
-// Mock orders data
-const orders = [
+// Load additional users from localStorage if available
+const loadUsersFromStorage = () => {
+  const stored = localStorage.getItem('neenu_natural_users');
+  if (stored) {
+    const storedUsers = JSON.parse(stored);
+    // Merge with existing users, avoiding duplicates
+    storedUsers.forEach(storedUser => {
+      if (!users.find(u => u.id === storedUser.id || u.email === storedUser.email)) {
+        users.push(storedUser);
+      }
+    });
+  }
+};
+
+// Save users to localStorage
+const saveUsersToStorage = () => {
+  // Only save customer users (not admin) to storage
+  const customerUsers = users.filter(u => u.role === 'customer');
+  localStorage.setItem('neenu_natural_users', JSON.stringify(customerUsers));
+};
+
+// Initialize users on load
+loadUsersFromStorage();
+
+// Mock orders data - load from localStorage if available
+let orders = [
   {
     id: 1,
     userId: 2,
@@ -557,6 +581,28 @@ const orders = [
     createdAt: "2024-08-20T14:15:00Z"
   }
 ];
+
+// Load additional orders from localStorage if available
+const loadOrdersFromStorage = () => {
+  const stored = localStorage.getItem('neenu_natural_orders');
+  if (stored) {
+    const storedOrders = JSON.parse(stored);
+    // Merge with existing orders, avoiding duplicates
+    storedOrders.forEach(storedOrder => {
+      if (!orders.find(o => o.id === storedOrder.id)) {
+        orders.push(storedOrder);
+      }
+    });
+  }
+};
+
+// Save orders to localStorage
+const saveOrdersToStorage = () => {
+  localStorage.setItem('neenu_natural_orders', JSON.stringify(orders));
+};
+
+// Initialize orders on load
+loadOrdersFromStorage();
 
 // Settings data
 const settings = {
@@ -605,15 +651,26 @@ const dataService = {
   addUser(userData) {
     const newUser = {
       ...userData,
-      id: users.length + 1,
+      id: Math.max(...users.map(u => u.id), 0) + 1,
       createdAt: new Date().toISOString(),
       addresses: [],
       orders: [],
       wishlist: []
     };
     users.push(newUser);
+    saveUsersToStorage(); // Persist to localStorage
     console.log('New user added:', newUser);
     return newUser;
+  },
+
+  updateUser(id, updates) {
+    const userIndex = users.findIndex(u => u.id === parseInt(id));
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], ...updates };
+      saveUsersToStorage();
+      return users[userIndex];
+    }
+    return null;
   },
 
   // Order management  
@@ -633,6 +690,7 @@ const dataService = {
     const orderIndex = orders.findIndex(o => o.id === parseInt(id));
     if (orderIndex !== -1) {
       orders[orderIndex] = { ...orders[orderIndex], ...updates };
+      saveOrdersToStorage(); // Persist changes
       return orders[orderIndex];
     }
     return null;
@@ -641,11 +699,23 @@ const dataService = {
   addOrder(orderData) {
     const newOrder = {
       ...orderData,
-      id: orders.length + 1,
+      id: Math.max(...orders.map(o => o.id), 0) + 1,
       orderId: orderData.orderId || `NN${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString()
     };
     orders.push(newOrder);
+    saveOrdersToStorage(); // Persist to localStorage
+    
+    // Update user's order history and stats
+    if (orderData.userId) {
+      const user = users.find(u => u.id === parseInt(orderData.userId));
+      if (user) {
+        user.totalOrders = (user.totalOrders || 0) + 1;
+        user.totalSpent = (user.totalSpent || 0) + (orderData.total || 0);
+        saveUsersToStorage();
+      }
+    }
+    
     console.log('Order added to database:', newOrder);
     return newOrder;
   },
