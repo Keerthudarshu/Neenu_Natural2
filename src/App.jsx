@@ -1,10 +1,11 @@
 
 import React from "react";
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
+import dataService from './services/dataService';
 
 // Import your page components
 import Homepage from './pages/homepage';
@@ -18,6 +19,35 @@ import AdminLogin from './pages/admin-login';
 import AdminPanel from './pages/admin-panel';
 import AdminDashboard from './pages/admin-dashboard';
 import NotFound from './pages/NotFound';
+
+// Protected Route Component
+const ProtectedAdminRoute = ({ children }) => {
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+  const sessionData = localStorage.getItem('neenu_auth_session');
+  
+  let isValidAdmin = false;
+  
+  if (adminUser && adminUser.role === 'admin') {
+    const user = dataService.getUser(adminUser.id);
+    isValidAdmin = user && user.role === 'admin';
+  } else if (sessionData) {
+    try {
+      const session = JSON.parse(sessionData);
+      const user = dataService.getUser(session.userId);
+      isValidAdmin = user && user.role === 'admin';
+    } catch (error) {
+      console.error('Invalid session data:', error);
+    }
+  }
+  
+  if (!isValidAdmin) {
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('neenu_auth_session');
+    return <Navigate to="/admin-login" replace />;
+  }
+  
+  return children;
+};
 
 function App() {
   return (
@@ -39,8 +69,22 @@ function App() {
                 <Route path="/user-register" element={<UserAuth />} />
                 <Route path="/user-account-dashboard" element={<UserAccountDashboard />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/admin-panel" element={<AdminPanel />} />
+                <Route 
+                  path="/admin-dashboard" 
+                  element={
+                    <ProtectedAdminRoute>
+                      <AdminDashboard />
+                    </ProtectedAdminRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin-panel" 
+                  element={
+                    <ProtectedAdminRoute>
+                      <AdminPanel />
+                    </ProtectedAdminRoute>
+                  } 
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </ErrorBoundary>

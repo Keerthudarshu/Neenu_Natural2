@@ -17,33 +17,58 @@ const AdminPanel = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check both localStorage sources for admin session
-    const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-    const sessionData = localStorage.getItem('neenu_auth_session');
-    
-    let validAdmin = null;
-    
-    if (adminUser && adminUser.role === 'admin') {
-      validAdmin = adminUser;
-    } else if (sessionData) {
-      const session = JSON.parse(sessionData);
-      const user = dataService.getUser(session.userId);
-      if (user && user.role === 'admin') {
-        validAdmin = user;
-        // Sync adminUser in localStorage
-        localStorage.setItem('adminUser', JSON.stringify(user));
+    // Always check authentication on component mount and route changes
+    const checkAuthentication = () => {
+      const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+      const sessionData = localStorage.getItem('neenu_auth_session');
+      
+      let validAdmin = null;
+      
+      // First check adminUser in localStorage
+      if (adminUser && adminUser.role === 'admin') {
+        // Verify this user still exists and has admin role
+        const user = dataService.getUser(adminUser.id);
+        if (user && user.role === 'admin') {
+          validAdmin = adminUser;
+        }
       }
-    }
+      
+      // If no valid admin from adminUser, check session
+      if (!validAdmin && sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          const user = dataService.getUser(session.userId);
+          if (user && user.role === 'admin') {
+            validAdmin = user;
+            // Sync adminUser in localStorage
+            localStorage.setItem('adminUser', JSON.stringify(user));
+          }
+        } catch (error) {
+          console.error('Invalid session data:', error);
+        }
+      }
+      
+      // If no valid admin found, redirect to login
+      if (!validAdmin) {
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('neenu_auth_session');
+        navigate('/admin-login', { replace: true });
+        return false;
+      }
+      
+      setCurrentUser(validAdmin);
+      return true;
+    };
+
+    // Run authentication check
+    const isAuthenticated = checkAuthentication();
     
-    if (!validAdmin) {
-      // Clear any invalid sessions
-      localStorage.removeItem('adminUser');
-      localStorage.removeItem('neenu_auth_session');
-      navigate('/admin-login');
-      return;
-    }
+    // Set up periodic authentication check (every 30 seconds)
+    const authInterval = setInterval(() => {
+      checkAuthentication();
+    }, 30000);
     
-    setCurrentUser(validAdmin);
+    return () => clearInterval(authInterval);
   }, [navigate]);
 
   const renderActiveSection = () => {
