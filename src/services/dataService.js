@@ -528,6 +528,59 @@ const users = [
   }
 ];
 
+// Mock orders data
+const orders = [
+  {
+    id: 1,
+    userId: 2,
+    items: [
+      { productId: 1, name: "Organic Coconut Oil", quantity: 2, price: 450 }
+    ],
+    total: 950,
+    subtotal: 900,
+    shipping: 50,
+    status: "delivered",
+    paymentMethod: "cod",
+    shippingAddress: {
+      name: "John Doe",
+      street: "123 Main Street",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400001"
+    },
+    createdAt: "2024-08-15T10:30:00Z"
+  },
+  {
+    id: 2,
+    userId: 2,
+    items: [
+      { productId: 2, name: "A2 Cow Ghee", quantity: 1, price: 850 }
+    ],
+    total: 900,
+    subtotal: 850,
+    shipping: 50,
+    status: "shipped",
+    paymentMethod: "upi",
+    shippingAddress: {
+      name: "John Doe",
+      street: "123 Main Street",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400001"
+    },
+    createdAt: "2024-08-20T14:15:00Z"
+  }
+];
+
+// Settings data
+const settings = {
+  siteName: "Neenu's Natural",
+  currency: "INR",
+  shippingFee: 50,
+  freeShippingThreshold: 500,
+  taxRate: 0.18
+};
+
 const dataService = {
   // Authentication methods
   authenticate(emailOrUsername, password) {
@@ -547,13 +600,56 @@ const dataService = {
     return users.find(u => u.email === email);
   },
 
+  getUsers() {
+    return users;
+  },
+
   addUser(userData) {
     const newUser = {
       ...userData,
-      id: users.length + 1
+      id: users.length + 1,
+      createdAt: new Date().toISOString()
     };
     users.push(newUser);
     return newUser;
+  },
+
+  // Order management  
+  getOrders() {
+    return orders;
+  },
+
+  getOrder(id) {
+    return orders.find(o => o.id === parseInt(id));
+  },
+
+  updateOrder(id, updates) {
+    const orderIndex = orders.findIndex(o => o.id === parseInt(id));
+    if (orderIndex !== -1) {
+      orders[orderIndex] = { ...orders[orderIndex], ...updates };
+      return orders[orderIndex];
+    }
+    return null;
+  },
+
+  addOrder(orderData) {
+    const newOrder = {
+      ...orderData,
+      id: orders.length + 1,
+      createdAt: new Date().toISOString()
+    };
+    orders.push(newOrder);
+    return newOrder;
+  },
+
+  // Settings management
+  getSettings() {
+    return settings;
+  },
+
+  updateSettings(newSettings) {
+    Object.assign(settings, newSettings);
+    return settings;
   },
 
   // Get all products

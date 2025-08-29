@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import Header from '../../components/ui/Header';
 import DashboardSidebar from './components/DashboardSidebar';
 import DashboardOverview from './components/DashboardOverview';
@@ -13,6 +14,7 @@ import PreferencesSection from './components/PreferencesSection';
 const UserAccountDashboard = () => {
   const location = useLocation();
   const { user: authUser, userProfile } = useAuth();
+  const { getCartItemCount } = useCart();
   const [activeSection, setActiveSection] = useState('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -25,11 +27,12 @@ const UserAccountDashboard = () => {
     dateOfBirth: authUser?.dateOfBirth || "1990-05-15",
     gender: authUser?.gender || "Not specified",
     memberSince: authUser?.memberSince || "January 2023",
-    totalOrders: authUser?.totalOrders || 0,
-    totalSpent: authUser?.totalSpent || "0",
-    totalSaved: authUser?.totalSaved || "0",
-    loyaltyPoints: authUser?.loyaltyPoints || 0,
-    wishlistCount: authUser?.wishlistCount || 0,
+    totalOrders: authUser?.totalOrders || 3,
+    totalSpent: authUser?.totalSpent || "3747",
+    totalSaved: authUser?.totalSaved || "250",
+    loyaltyPoints: authUser?.loyaltyPoints || 374,
+    cartItemCount: getCartItemCount(),
+    wishlistCount: authUser?.wishlistCount || 3,
     lastPasswordChange: authUser?.lastPasswordChange || "Not set"
   });
 

@@ -33,25 +33,37 @@ const DashboardOverview = ({ user, recentOrders, loyaltyPoints }) => {
   const stats = [
     {
       label: 'Total Orders',
-      value: user?.totalOrders,
+      value: user?.totalOrders || 0,
       icon: 'Package',
       color: 'text-primary'
     },
     {
+      label: 'Total Spent',
+      value: `₹${user?.totalSpent || 0}`,
+      icon: 'CreditCard',
+      color: 'text-primary'
+    },
+    {
       label: 'Total Saved',
-      value: `₹${user?.totalSaved}`,
+      value: `₹${user?.totalSaved || 0}`,
       icon: 'Wallet',
       color: 'text-success'
     },
     {
+      label: 'Cart Items',
+      value: user?.cartItemCount || 0,
+      icon: 'ShoppingCart',
+      color: 'text-accent'
+    },
+    {
       label: 'Loyalty Points',
-      value: loyaltyPoints,
+      value: loyaltyPoints || 0,
       icon: 'Star',
       color: 'text-warning'
     },
     {
       label: 'Wishlist Items',
-      value: user?.wishlistCount,
+      value: user?.wishlistCount || 0,
       icon: 'Heart',
       color: 'text-destructive'
     }

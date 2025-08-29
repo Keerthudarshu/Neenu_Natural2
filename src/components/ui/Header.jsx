@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 
 import Input from './Input';
@@ -9,7 +9,7 @@ import CartDrawer from './CartDrawer';
 import { useCart } from '../../contexts/CartContext.jsx';
 const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
   const { cartItems, getCartItemCount, updateQuantity, removeFromCart } = useCart();
-  const navigate = require('react-router-dom').useNavigate();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
