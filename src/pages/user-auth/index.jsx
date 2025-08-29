@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
@@ -10,6 +10,7 @@ import dataService from '../../services/dataService';
 
 const UserAuth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -74,7 +75,9 @@ const UserAuth = () => {
         if (result.error) {
           setErrors({ general: result.error.message });
         } else {
-          navigate('/user-account-dashboard');
+          // Redirect to where user came from (like checkout) or dashboard
+          const redirectTo = location.state?.from || '/user-account-dashboard';
+          navigate(redirectTo);
         }
       } else {
         // Register
@@ -103,7 +106,9 @@ const UserAuth = () => {
           if (result.error) {
             setErrors({ general: result.error.message });
           } else {
-            navigate('/user-account-dashboard');
+            // Redirect to where user came from (like checkout) or dashboard
+            const redirectTo = location.state?.from || '/user-account-dashboard';
+            navigate(redirectTo);
           }
         }
       }
@@ -128,6 +133,11 @@ const UserAuth = () => {
               <p className="text-muted-foreground">
                 {isLogin ? 'Sign in to your account' : 'Join Neenu\'s Natural family'}
               </p>
+              {location.state?.message && (
+                <p className="text-primary text-sm font-medium mt-2">
+                  {location.state.message}
+                </p>
+              )}
             </div>
 
             {errors.general && (

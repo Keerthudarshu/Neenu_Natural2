@@ -19,7 +19,19 @@ import Icon from '../../components/AppIcon';
 const CheckoutProcess = () => {
   const navigate = useNavigate();
   const { cartItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/user-login', { 
+        state: { 
+          from: '/checkout-process',
+          message: 'Please sign in to continue with checkout'
+        }
+      });
+    }
+  }, [user, loading, navigate]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSummaryExpanded, setOrderSummaryExpanded] = useState(false);

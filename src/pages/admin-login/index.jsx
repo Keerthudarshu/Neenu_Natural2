@@ -31,7 +31,7 @@ const AdminLogin = () => {
 
     try {
       // For admin, we'll use email authentication or check for admin username
-      const user = dataService.authenticate(formData.username === 'admin' ? 'admin@neenu.com' : formData.username, formData.password);
+      const user = dataService.authenticate(formData.username === 'admin' ? 'admin@neenusnatural.com' : formData.username, formData.password);
       
       if (user && user.role === 'admin') {
         localStorage.setItem('adminUser', JSON.stringify(user));

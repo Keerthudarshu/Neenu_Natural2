@@ -1,5 +1,9 @@
+// Import database data
+import databaseData from '../data/database.json';
+
+
 // Mock data service to simulate API calls
-const products = [
+const additionalProducts = [
   // Unpolished Pulses, Dals & Rice
   {
     id: 1,
@@ -501,25 +505,29 @@ const categories = [
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Mock users database
-const users = [
+let users = [
   {
     id: 1,
-    name: 'Admin User',
-    email: 'admin@neenu.com',
+    name: 'Administrator',
+    email: 'admin@neenusnatural.com',
+    username: 'admin',
     password: 'admin123', // In real app, this would be hashed
     role: 'admin',
+    phone: '+91 80 4567 8901',
     memberSince: '2024-01-01',
     totalOrders: 0,
     totalSpent: 0,
     loyaltyPoints: 0,
-    totalSaved: 0
+    totalSaved: 0,
+    isActive: true
   },
   {
     id: 2,
-    name: 'John Doe',
-    email: 'john@example.com',
-    password: 'password123',
+    name: 'Test User',
+    email: 'user@test.com',
+    password: 'user123',
     role: 'customer',
+    phone: '+91 9876543211',
     memberSince: '2024-02-15',
     totalOrders: 5,
     totalSpent: 2450,
@@ -584,10 +592,13 @@ const settings = {
 const dataService = {
   // Authentication methods
   authenticate(emailOrUsername, password) {
+    console.log('Authenticating user:', emailOrUsername);
+    console.log('Available users:', users.map(u => ({ email: u.email, username: u.username, role: u.role })));
     const user = users.find(u => 
       (u.email === emailOrUsername || u.username === emailOrUsername) && 
       u.password === password
     );
+    console.log('Found user:', user);
     return user || null;
   },
 
@@ -608,9 +619,13 @@ const dataService = {
     const newUser = {
       ...userData,
       id: users.length + 1,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      addresses: [],
+      orders: [],
+      wishlist: []
     };
     users.push(newUser);
+    console.log('New user added:', newUser);
     return newUser;
   },
 
