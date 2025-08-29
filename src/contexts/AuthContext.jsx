@@ -81,6 +81,52 @@ export const AuthProvider = ({ children, setError }) => {
     return user?.role === 'admin';
   };
 
+  const signUp = async (userData) => {
+    try {
+      setLoading(true);
+      
+      // Check if user already exists
+      const existingUser = dataService.getUserByEmail(userData.email);
+      if (existingUser) {
+        return { user: null, error: { message: 'User already exists with this email' } };
+      }
+      
+      // Create new user
+      const newUser = dataService.addUser({
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        role: 'customer',
+        phone: userData.phone || '',
+        memberSince: new Date().toISOString().split('T')[0],
+        totalOrders: 0,
+        totalSpent: 0,
+        loyaltyPoints: 0,
+        totalSaved: 0,
+        isActive: true
+      });
+      
+      if (newUser) {
+        setUser(newUser);
+        setUserProfile(newUser);
+        
+        // Save session
+        localStorage.setItem('neenu_auth_session', JSON.stringify({
+          userId: newUser.id,
+          timestamp: Date.now()
+        }));
+        
+        return { user: newUser, error: null };
+      } else {
+        return { user: null, error: { message: 'Failed to create user' } };
+      }
+    } catch (error) {
+      return { user: null, error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateProfile = async (updates) => {
     try {
       if (!user) return { error: { message: 'No user logged in' } };
@@ -101,6 +147,7 @@ export const AuthProvider = ({ children, setError }) => {
     userProfile,
     loading,
     signIn,
+    signUp,
     signOut,
     isAdmin,
     updateProfile

@@ -504,37 +504,15 @@ const categories = [
 // Simulate API delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Mock users database
-let users = [
-  {
-    id: 1,
-    name: 'Administrator',
-    email: 'admin@neenusnatural.com',
-    username: 'admin',
-    password: 'admin123', // In real app, this would be hashed
-    role: 'admin',
-    phone: '+91 80 4567 8901',
-    memberSince: '2024-01-01',
-    totalOrders: 0,
-    totalSpent: 0,
-    loyaltyPoints: 0,
-    totalSaved: 0,
-    isActive: true
-  },
-  {
-    id: 2,
-    name: 'Test User',
-    email: 'user@test.com',
-    password: 'user123',
-    role: 'customer',
-    phone: '+91 9876543211',
-    memberSince: '2024-02-15',
-    totalOrders: 5,
-    totalSpent: 2450,
-    loyaltyPoints: 245,
-    totalSaved: 150
-  }
-];
+// Use users from database.json and extend with additional properties
+let users = databaseData.users.map(user => ({
+  ...user,
+  id: parseInt(user.id),
+  totalOrders: user.totalOrders || 0,
+  totalSpent: user.totalSpent || 0,
+  loyaltyPoints: user.loyaltyPoints || 0,
+  totalSaved: user.totalSaved || 0
+}));
 
 // Mock orders data
 const orders = [
@@ -588,6 +566,15 @@ const settings = {
   freeShippingThreshold: 500,
   taxRate: 0.18
 };
+
+// Combine products from database.json and additional products with unique IDs
+const products = [
+  ...databaseData.products,
+  ...additionalProducts.map(product => ({
+    ...product,
+    id: product.id + 100 // Offset additional products to avoid ID conflicts
+  }))
+];
 
 const dataService = {
   // Authentication methods

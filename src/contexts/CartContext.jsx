@@ -14,11 +14,38 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [savedItems, setSavedItems] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState([]);
+
+  // Simple notification function
+  const showNotification = (message, type = 'success') => {
+    // Create a simple toast notification
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          ${type === 'success' 
+            ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
+            : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>'
+          }
+        </svg>
+        <span>${message}</span>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  };
 
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('neenu_cart');
     const savedForLater = localStorage.getItem('neenu_saved_items');
+    const savedWishlist = localStorage.getItem('neenu_wishlist');
     
     if (savedCart) {
       try {
@@ -35,6 +62,14 @@ export const CartProvider = ({ children }) => {
         console.error('Error loading saved items:', error);
       }
     }
+    
+    if (savedWishlist) {
+      try {
+        setWishlistItems(JSON.parse(savedWishlist));
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+      }
+    }
   }, []);
 
   // Save cart to localStorage whenever it changes
@@ -46,16 +81,22 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('neenu_saved_items', JSON.stringify(savedItems));
   }, [savedItems]);
 
+  useEffect(() => {
+    localStorage.setItem('neenu_wishlist', JSON.stringify(wishlistItems));
+  }, [wishlistItems]);
+
   const addToCart = (product, quantity = 1) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === product.id);
       if (existingItem) {
+        showNotification(`Updated ${product.name} quantity in cart!`);
         return prev.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
+        showNotification(`${product.name} added to cart!`);
         return [...prev, { ...product, quantity }];
       }
     });
@@ -107,9 +148,37 @@ export const CartProvider = ({ children }) => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
   };
 
+  const addToWishlist = (product) => {
+    setWishlistItems(prev => {
+      const existingItem = prev.find(item => item.id === product.id);
+      if (existingItem) {
+        showNotification(`${product.name} is already in wishlist!`, 'error');
+        return prev;
+      } else {
+        showNotification(`${product.name} added to wishlist!`);
+        return [...prev, product];
+      }
+    });
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishlistItems(prev => {
+      const product = prev.find(item => item.id === productId);
+      if (product) {
+        showNotification(`${product.name} removed from wishlist!`);
+      }
+      return prev.filter(item => item.id !== productId);
+    });
+  };
+
+  const isInWishlist = (productId) => {
+    return wishlistItems.some(item => item.id === productId);
+  };
+
   const value = {
     cartItems,
     savedItems,
+    wishlistItems,
     addToCart,
     updateQuantity,
     removeFromCart,
@@ -118,7 +187,10 @@ export const CartProvider = ({ children }) => {
     removeFromSaved,
     clearCart,
     getCartTotal,
-    getCartItemCount
+    getCartItemCount,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist
   };
 
   return (
