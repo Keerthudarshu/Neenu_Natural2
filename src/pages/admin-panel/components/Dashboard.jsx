@@ -264,47 +264,9 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Revenue Chart */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-heading font-semibold text-foreground">Revenue Overview</h2>
-          <BarChart3 className="w-5 h-5 text-muted-foreground" />
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Total Revenue</span>
-            <span className="font-semibold text-foreground">₹{stats.totalRevenue.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">This Month</span>
-            <span className="font-semibold text-primary">₹{stats.monthlyRevenue.toLocaleString()}</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-3">
-            <div 
-              className="bg-primary h-3 rounded-full transition-all duration-300"
-              style={{ 
-                width: `${stats.totalRevenue > 0 ? Math.min((stats.monthlyRevenue / stats.totalRevenue) * 100, 100) : 0}%` 
-              }}
-            ></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <p className="text-sm text-muted-foreground">Avg Order</p>
-              <p className="font-semibold text-primary">₹{Math.round(stats.averageOrderValue)}</p>
-            </div>
-            <div className="p-3 bg-success/10 rounded-lg">
-              <p className="text-sm text-muted-foreground">Completion Rate</p>
-              <p className="font-semibold text-success">
-                {stats.totalOrders > 0 ? Math.round((stats.completedOrders / stats.totalOrders) * 100) : 0}%
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Horizontal Layout - 4 Column Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Revenue Overview - First Column */}
+      {/* Dashboard Sections - 2x2 Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Overview */}
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-heading font-semibold text-foreground">Revenue Overview</h2>
@@ -319,84 +281,88 @@ const Dashboard = () => {
               <span className="text-sm text-muted-foreground">This Month</span>
               <span className="font-semibold text-primary">₹{stats.monthlyRevenue.toLocaleString()}</span>
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-3">
               <div 
-                className="bg-primary h-2 rounded-full transition-all duration-300"
+                className="bg-primary h-3 rounded-full transition-all duration-300"
                 style={{ 
                   width: `${stats.totalRevenue > 0 ? Math.min((stats.monthlyRevenue / stats.totalRevenue) * 100, 100) : 0}%` 
                 }}
               ></div>
             </div>
-            <div className="grid grid-cols-1 gap-2">
-              <div className="p-2 bg-success/10 rounded-lg text-center">
-                <p className="text-xs text-muted-foreground">Avg Order</p>
-                <p className="font-semibold text-success text-sm">₹{Math.round(stats.averageOrderValue)}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-success/10 rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">Avg Order</p>
+                <p className="font-semibold text-success">₹{Math.round(stats.averageOrderValue)}</p>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">Completion Rate</p>
+                <p className="font-semibold text-primary">
+                  {stats.totalOrders > 0 ? Math.round((stats.completedOrders / stats.totalOrders) * 100) : 0}%
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Top Selling Products - Second Column */}
+        {/* Top Selling Products */}
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-heading font-semibold text-foreground">Top Selling</h2>
             <Eye className="w-5 h-5 text-muted-foreground" />
           </div>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {stats.topSellingProducts.length > 0 ? (
-              stats.topSellingProducts.slice(0, 4).map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+              stats.topSellingProducts.slice(0, 5).map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex-1">
-                    <p className="font-body font-medium text-foreground text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.weight || 'N/A'}</p>
+                    <p className="font-body font-medium text-foreground">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">{product.weight || 'N/A'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-body font-medium text-foreground text-sm">{product.soldQuantity}</p>
-                    <p className="text-xs text-success">₹{product.price}</p>
+                    <p className="font-body font-bold text-primary">{product.soldQuantity} sold</p>
+                    <p className="text-sm text-success">₹{product.price}</p>
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center py-8">
                 <Eye className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">No sales data</p>
+                <p className="text-muted-foreground">No sales data yet</p>
               </div>
             )}
           </div>
         </div>
-        {/* Stock Alerts - Third Column */}
+        {/* Stock Alerts */}
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-heading font-semibold text-foreground flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2 text-warning" />
-                Stock Alerts
-                {stats.lowStockProducts.length > 0 && (
-                  <span className="ml-2 bg-warning text-warning-foreground px-2 py-1 rounded-full text-xs">
-                    {stats.lowStockProducts.length}
-                  </span>
-                )}
-              </h2>
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2 text-warning" />
+              <h2 className="text-lg font-heading font-semibold text-foreground">Stock Alerts</h2>
+              {stats.lowStockProducts.length > 0 && (
+                <span className="ml-2 bg-warning text-warning-foreground px-2 py-1 rounded-full text-xs font-medium">
+                  {stats.lowStockProducts.length}
+                </span>
+              )}
             </div>
             <button
               onClick={handleBulkRestock}
-              className="flex items-center space-x-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs hover:bg-primary/20 transition-colors"
+              className="flex items-center space-x-2 px-3 py-1 bg-primary/10 text-primary rounded-md text-sm hover:bg-primary/20 transition-colors"
             >
-              <Plus className="w-3 h-3" />
-              <span>Bulk</span>
+              <Plus className="w-4 h-4" />
+              <span>+ Bulk</span>
             </button>
           </div>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {stats.lowStockProducts.length > 0 ? (
-              stats.lowStockProducts.slice(0, 4).map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-2 bg-warning/10 rounded-lg">
+              stats.lowStockProducts.slice(0, 5).map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-warning/10 rounded-lg">
                   <div className="flex-1">
-                    <p className="font-body font-medium text-foreground text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.weight || 'N/A'}</p>
+                    <p className="font-body font-medium text-foreground">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">{product.weight || 'N/A'}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <div className="text-right">
-                      <p className={`font-body font-medium text-xs ${
+                      <p className={`font-body font-bold ${
                         (product.stockQuantity || 0) <= 5 ? 'text-destructive' : 'text-warning'
                       }`}>
                         {product.stockQuantity || 0} left
@@ -404,9 +370,9 @@ const Dashboard = () => {
                     </div>
                     <button
                       onClick={() => handleQuickRestockProduct(product.id)}
-                      className="px-2 py-1 bg-primary text-primary-foreground rounded text-xs hover:bg-primary/90 transition-colors"
+                      className="px-3 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors text-sm"
                     >
-                      +
+                      + Add
                     </button>
                   </div>
                 </div>
@@ -414,39 +380,39 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-8">
                 <Package className="w-8 h-8 text-success mx-auto mb-2" />
-                <p className="text-success font-medium text-sm">All stocked!</p>
+                <p className="text-success font-medium">All products well stocked!</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Recent Orders - Fourth Column */}
+        {/* Recent Orders */}
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-heading font-semibold text-foreground">Recent Orders</h2>
             <ShoppingCart className="w-5 h-5 text-muted-foreground" />
           </div>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {stats.recentOrders.length > 0 ? (
-              stats.recentOrders.slice(0, 4).map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
+              stats.recentOrders.slice(0, 5).map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
                   <div className="flex-1">
-                    <p className="font-body font-medium text-foreground text-sm">#{order.id}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="font-body font-medium text-foreground">#{order.id}</p>
+                    <p className="text-sm text-muted-foreground">
                       {new Date(order.createdAt).toLocaleDateString('en-IN')}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {order.shippingAddress?.name || order.customerName || 'Customer'}
+                    <p className="text-sm text-muted-foreground">
+                      {order.shippingAddress?.firstName || order.customerName || 'Customer'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-body font-medium text-foreground text-sm">₹{(order.total || 0).toLocaleString()}</p>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                      order.status === 'pending' ? 'bg-warning/10 text-warning' :
-                      order.status === 'processing' ? 'bg-primary/10 text-primary' :
+                    <p className="font-body font-bold text-foreground">₹{(order.total || 0).toLocaleString()}</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium capitalize mt-1 ${
+                      order.status === 'pending' ? 'bg-warning/20 text-warning' :
+                      order.status === 'processing' ? 'bg-primary/20 text-primary' :
                       order.status === 'shipped' ? 'bg-blue-100 text-blue-600' :
-                      order.status === 'delivered' || order.status === 'completed' ? 'bg-success/10 text-success' :
-                      order.status === 'cancelled' ? 'bg-destructive/10 text-destructive' :
+                      order.status === 'delivered' || order.status === 'completed' ? 'bg-success/20 text-success' :
+                      order.status === 'cancelled' ? 'bg-destructive/20 text-destructive' :
                       'bg-muted text-muted-foreground'
                     }`}>
                       {order.status}
@@ -457,7 +423,7 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-8">
                 <ShoppingCart className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">No orders yet</p>
+                <p className="text-muted-foreground">No orders yet</p>
               </div>
             )}
           </div>
