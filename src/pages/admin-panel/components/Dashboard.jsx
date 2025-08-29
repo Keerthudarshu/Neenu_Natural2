@@ -2,9 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Package, Users, ShoppingCart, DollarSign, TrendingUp, TrendingDown, 
-  AlertTriangle, Plus, BarChart3, Calendar, Eye, RefreshCw 
+  AlertTriangle, Plus, BarChart3, Calendar, Eye, RefreshCw, Download, FileText
 } from 'lucide-react';
 import dataService from '../../../services/dataService';
+import { 
+  exportToCSV, 
+  filterDataByDateRange, 
+  formatOrdersForCSV, 
+  formatUsersForCSV, 
+  formatProductsForCSV, 
+  formatRevenueDataForCSV,
+  generateSummaryReport 
+} from '../../../utils/csvExport';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -23,10 +32,28 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [rawData, setRawData] = useState({
+    products: [],
+    users: [],
+    orders: []
+  });
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showExportMenu && !event.target.closest('.relative')) {
+        setShowExportMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportMenu]);
 
   const loadDashboardData = async () => {
     try {
@@ -39,6 +66,13 @@ const Dashboard = () => {
       
       const products = productsResponse.data || [];
       const customerUsers = users.filter(u => u.role === 'customer');
+      
+      // Store raw data for CSV export
+      setRawData({
+        products,
+        users,
+        orders
+      });
       
       // Calculate revenue metrics
       const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
@@ -155,6 +189,44 @@ const Dashboard = () => {
     alert('Bulk restock feature - would open a dedicated stock management interface');
   };
 
+  // CSV Export Functions
+  const handleExportOrders = (filterType) => {
+    const filteredOrders = filterDataByDateRange(rawData.orders, filterType);
+    const formattedData = formatOrdersForCSV(filteredOrders);
+    const filename = `orders_${filterType}_${new Date().toISOString().split('T')[0]}`;
+    exportToCSV(formattedData, filename);
+    setShowExportMenu(false);
+  };
+
+  const handleExportUsers = (filterType) => {
+    const filteredUsers = filterDataByDateRange(rawData.users.filter(u => u.role === 'customer'), filterType);
+    const formattedData = formatUsersForCSV(filteredUsers);
+    const filename = `users_${filterType}_${new Date().toISOString().split('T')[0]}`;
+    exportToCSV(formattedData, filename);
+    setShowExportMenu(false);
+  };
+
+  const handleExportProducts = () => {
+    const formattedData = formatProductsForCSV(rawData.products);
+    const filename = `products_${new Date().toISOString().split('T')[0]}`;
+    exportToCSV(formattedData, filename);
+    setShowExportMenu(false);
+  };
+
+  const handleExportRevenue = (filterType) => {
+    const formattedData = formatRevenueDataForCSV(rawData.orders, filterType);
+    const filename = `revenue_${filterType}_${new Date().toISOString().split('T')[0]}`;
+    exportToCSV(formattedData, filename);
+    setShowExportMenu(false);
+  };
+
+  const handleExportSummary = (filterType) => {
+    const summaryData = generateSummaryReport(rawData.products, rawData.users, rawData.orders, filterType);
+    const filename = `summary_report_${filterType}_${new Date().toISOString().split('T')[0]}`;
+    exportToCSV(summaryData, filename);
+    setShowExportMenu(false);
+  };
+
   const StatCard = ({ title, value, subtitle, icon: Icon, color = 'primary' }) => (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between">
@@ -190,14 +262,121 @@ const Dashboard = () => {
           <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {/* Export Button with Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="flex items-center space-x-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+            
+            {showExportMenu && (
+              <div className="absolute right-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-lg z-50">
+                <div className="p-3">
+                  <div className="space-y-3">
+                    {/* Summary Report */}
+                    <div className="border-b border-border pb-3">
+                      <h3 className="font-medium text-foreground mb-2 flex items-center">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Summary Report
+                      </h3>
+                      <div className="flex flex-wrap gap-1">
+                        {['daily', 'weekly', 'monthly', 'yearly'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => handleExportSummary(period)}
+                            className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/80 transition-colors capitalize"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Orders */}
+                    <div className="border-b border-border pb-3">
+                      <h3 className="font-medium text-foreground mb-2">Orders</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {['daily', 'weekly', 'monthly', 'yearly', 'all'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => handleExportOrders(period)}
+                            className="px-2 py-1 text-xs bg-accent text-accent-foreground rounded hover:bg-accent/80 transition-colors capitalize"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Users */}
+                    <div className="border-b border-border pb-3">
+                      <h3 className="font-medium text-foreground mb-2">Customers</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {['daily', 'weekly', 'monthly', 'yearly', 'all'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => handleExportUsers(period)}
+                            className="px-2 py-1 text-xs bg-success text-success-foreground rounded hover:bg-success/80 transition-colors capitalize"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Revenue */}
+                    <div className="border-b border-border pb-3">
+                      <h3 className="font-medium text-foreground mb-2">Revenue</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {['daily', 'weekly', 'monthly', 'yearly'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => handleExportRevenue(period)}
+                            className="px-2 py-1 text-xs bg-warning text-warning-foreground rounded hover:bg-warning/80 transition-colors capitalize"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Products */}
+                    <div>
+                      <h3 className="font-medium text-foreground mb-2">Products</h3>
+                      <button
+                        onClick={handleExportProducts}
+                        className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-colors"
+                      >
+                        Export All Products
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2 border-t border-border">
+                  <button
+                    onClick={() => setShowExportMenu(false)}
+                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Close Menu
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import ProductImageGallery from './components/ProductImageGallery';
@@ -13,8 +14,7 @@ const ProductDetailPage = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams?.get('id') || '1';
   
-  const [cartItems, setCartItems] = useState([]);
-  const [wishlistItems, setWishlistItems] = useState([]);
+  const { cartItems, addToCart, addToWishlist, removeFromWishlist, isInWishlist, getCartItemCount } = useCart();
 
   // Mock product data
   const mockProduct = {
@@ -220,48 +220,42 @@ const ProductDetailPage = () => {
   ];
 
   const handleAddToCart = (item) => {
-    const existingItem = cartItems?.find(
-      cartItem => cartItem?.productId === item?.productId && cartItem?.variantId === item?.variantId
-    );
+    const variant = mockProduct?.variants?.find(v => v?.id === item?.variantId);
+    if (!variant) return;
 
-    if (existingItem) {
-      setCartItems(cartItems?.map(cartItem =>
-        cartItem?.productId === item?.productId && cartItem?.variantId === item?.variantId
-          ? { ...cartItem, quantity: cartItem?.quantity + item?.quantity }
-          : cartItem
-      ));
-    } else {
-      const variant = mockProduct?.variants?.find(v => v?.id === item?.variantId);
-      const newItem = {
-        id: Date.now(),
-        productId: item?.productId,
-        variantId: item?.variantId,
-        name: mockProduct?.name,
-        variant: variant?.weight,
-        price: variant?.price,
-        image: mockProduct?.images?.[0],
-        quantity: item?.quantity
-      };
-      setCartItems([...cartItems, newItem]);
-    }
+    const productToAdd = {
+      id: `${item?.productId}-${item?.variantId}`,
+      productId: item?.productId,
+      variantId: item?.variantId,
+      name: mockProduct?.name,
+      variant: variant?.weight,
+      price: parseFloat(variant?.price) || 0,
+      originalPrice: parseFloat(variant?.originalPrice) || parseFloat(variant?.price) || 0,
+      image: mockProduct?.images?.[0],
+      category: 'Pickles',
+      brand: 'Neenu\'s Natural'
+    };
+    
+    addToCart(productToAdd, item?.quantity || 1);
   };
 
   const handleAddToWishlist = () => {
-    const isInWishlist = wishlistItems?.some(item => item?.id === mockProduct?.id);
+    const isInWishlistStatus = isInWishlist(mockProduct?.id);
     
-    if (isInWishlist) {
-      setWishlistItems(wishlistItems?.filter(item => item?.id !== mockProduct?.id));
+    if (isInWishlistStatus) {
+      removeFromWishlist(mockProduct?.id);
     } else {
-      setWishlistItems([...wishlistItems, {
+      const wishlistProduct = {
         id: mockProduct?.id,
         name: mockProduct?.name,
         image: mockProduct?.images?.[0],
-        price: mockProduct?.variants?.[0]?.price
-      }]);
+        price: parseFloat(mockProduct?.variants?.[0]?.price) || 0
+      };
+      addToWishlist(wishlistProduct);
     }
   };
 
-  const isInWishlist = wishlistItems?.some(item => item?.id === mockProduct?.id);
+  const isProductInWishlist = isInWishlist(mockProduct?.id);
   const averageRating = mockReviews?.reduce((sum, review) => sum + review?.rating, 0) / mockReviews?.length;
 
   useEffect(() => {
@@ -271,7 +265,7 @@ const ProductDetailPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        cartItemCount={cartItems?.reduce((sum, item) => sum + item?.quantity, 0)}
+        cartItemCount={getCartItemCount()}
         cartItems={cartItems}
         onSearch={() => {}}
       />
@@ -294,7 +288,7 @@ const ProductDetailPage = () => {
               product={mockProduct}
               onAddToCart={handleAddToCart}
               onAddToWishlist={handleAddToWishlist}
-              isInWishlist={isInWishlist}
+              isInWishlist={isProductInWishlist}
             />
           </div>
         </div>

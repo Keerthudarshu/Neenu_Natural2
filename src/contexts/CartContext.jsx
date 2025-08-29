@@ -86,18 +86,26 @@ export const CartProvider = ({ children }) => {
   }, [wishlistItems]);
 
   const addToCart = (product, quantity = 1) => {
+    // Ensure price is a valid number
+    const sanitizedProduct = {
+      ...product,
+      price: parseFloat(product.price) || 0,
+      originalPrice: parseFloat(product.originalPrice) || 0,
+      quantity: parseInt(quantity) || 1
+    };
+
     setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
+      const existingItem = prev.find(item => item.id === sanitizedProduct.id);
       if (existingItem) {
-        showNotification(`Updated ${product.name} quantity in cart!`);
+        showNotification(`Updated ${sanitizedProduct.name} quantity in cart!`);
         return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+          item.id === sanitizedProduct.id
+            ? { ...item, quantity: (parseInt(item.quantity) || 0) + (parseInt(quantity) || 1) }
             : item
         );
       } else {
-        showNotification(`${product.name} added to cart!`);
-        return [...prev, { ...product, quantity }];
+        showNotification(`${sanitizedProduct.name} added to cart!`);
+        return [...prev, sanitizedProduct];
       }
     });
   };
@@ -141,11 +149,15 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return cartItems.reduce((sum, item) => {
+      const price = parseFloat(item.price) || 0;
+      const quantity = parseInt(item.quantity) || 0;
+      return sum + (price * quantity);
+    }, 0);
   };
 
   const getCartItemCount = () => {
-    return cartItems.reduce((count, item) => count + item.quantity, 0);
+    return cartItems.reduce((count, item) => count + (parseInt(item.quantity) || 0), 0);
   };
 
   const addToWishlist = (product) => {

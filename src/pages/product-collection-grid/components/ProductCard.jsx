@@ -46,8 +46,8 @@ const ProductCard = ({
     return stars;
   };
 
-  const currentPrice = selectedVariant?.salePrice || product?.salePrice || product?.price;
-  const originalPrice = selectedVariant?.originalPrice || product?.originalPrice;
+  const currentPrice = parseFloat(selectedVariant?.salePrice || selectedVariant?.price || product?.salePrice || product?.price) || 0;
+  const originalPrice = parseFloat(selectedVariant?.originalPrice || product?.originalPrice) || 0;
   const savings = calculateSavings(originalPrice, currentPrice);
 
   // Handle Add to Cart for products with variants
@@ -198,7 +198,7 @@ const ProductCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="font-data font-bold text-lg text-foreground">
-              ₹{(selectedVariant?.salePrice || product?.salePrice || product?.price)?.toFixed(2) || '0.00'}
+              ₹{(parseFloat(selectedVariant?.salePrice || selectedVariant?.price || product?.salePrice || product?.price) || 0).toFixed(2)}
             </span>
             {originalPrice && originalPrice > currentPrice && (
               <>
