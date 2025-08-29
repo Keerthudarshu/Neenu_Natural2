@@ -35,6 +35,16 @@ export const generateInvoice = (order, user, settings = {}) => {
             border-bottom: 2px solid #e67e22;
             padding-bottom: 20px;
         }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
         .company-info h1 {
             color: #e67e22;
             margin: 0;
@@ -119,6 +129,70 @@ export const generateInvoice = (order, user, settings = {}) => {
             margin: 20px 0;
             border-left: 4px solid #28a745;
         }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .invoice-container {
+                padding: 20px;
+            }
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            .logo-section {
+                justify-content: center;
+            }
+            .company-logo {
+                width: 50px;
+                height: 50px;
+            }
+            .company-info h1 {
+                font-size: 24px;
+            }
+            .invoice-info {
+                text-align: center;
+            }
+            .invoice-info h2 {
+                font-size: 20px;
+            }
+            .invoice-details {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .order-table {
+                font-size: 12px;
+            }
+            .order-table th,
+            .order-table td {
+                padding: 8px 4px;
+            }
+            .totals {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+        @media (max-width: 480px) {
+            .invoice-container {
+                padding: 15px;
+            }
+            .company-info h1 {
+                font-size: 20px;
+            }
+            .logo-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .order-table {
+                font-size: 11px;
+            }
+            .order-table th,
+            .order-table td {
+                padding: 6px 2px;
+            }
+        }
         @media print {
             body { background: white; }
             .invoice-container { box-shadow: none; }
@@ -129,7 +203,10 @@ export const generateInvoice = (order, user, settings = {}) => {
     <div class="invoice-container">
         <div class="header">
             <div class="company-info">
-                <h1>${siteName}</h1>
+                <div class="logo-section">
+                    <img src="/assets/images/logo.png" alt="${siteName} Logo" class="company-logo">
+                    <h1>${siteName}</h1>
+                </div>
                 <p>Natural & Organic Products</p>
                 <p>Email: info@neenusnatural.com</p>
                 <p>Phone: +91 7892783668</p>

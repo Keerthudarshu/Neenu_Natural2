@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import dataService from '../../services/dataService';
@@ -14,7 +14,8 @@ import PreferencesSection from './components/PreferencesSection';
 
 const UserAccountDashboard = () => {
   const location = useLocation();
-  const { user: authUser, userProfile } = useAuth();
+  const navigate = useNavigate();
+  const { user: authUser, userProfile, loading } = useAuth();
   const { getCartItemCount } = useCart();
   const [activeSection, setActiveSection] = useState('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -22,22 +23,35 @@ const UserAccountDashboard = () => {
   // Real orders data - moved before any useEffect that uses it
   const [orders, setOrders] = useState([]);
 
-  // Use real user data from AuthContext or fallback to mock data
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!loading && !authUser) {
+      navigate('/user-login', { 
+        state: { 
+          from: '/user-account-dashboard',
+          message: 'Please sign in to access your account dashboard'
+        },
+        replace: true
+      });
+    }
+  }, [authUser, loading, navigate]);
+
+  // Only use authenticated user data - no fallback data
   const [user, setUser] = useState({
-    id: authUser?.id || 1,
-    name: authUser?.name || authUser?.email || "Guest User",
-    email: authUser?.email || "guest@example.com",
-    phone: authUser?.phone || "+91 9876543210",
-    dateOfBirth: authUser?.dateOfBirth || "1990-05-15",
-    gender: authUser?.gender || "Not specified",
-    memberSince: authUser?.memberSince || "January 2023",
-    totalOrders: 0,
-    totalSpent: 0,
-    totalSaved: 0,
-    loyaltyPoints: 0,
+    id: authUser?.id,
+    name: authUser?.name || authUser?.email,
+    email: authUser?.email,
+    phone: authUser?.phone,
+    dateOfBirth: authUser?.dateOfBirth,
+    gender: authUser?.gender,
+    memberSince: authUser?.memberSince,
+    totalOrders: authUser?.totalOrders || 0,
+    totalSpent: authUser?.totalSpent || 0,
+    totalSaved: authUser?.totalSaved || 0,
+    loyaltyPoints: authUser?.loyaltyPoints || 0,
     cartItemCount: getCartItemCount(),
     wishlistCount: authUser?.wishlistCount || 0,
-    lastPasswordChange: authUser?.lastPasswordChange || "Not set"
+    lastPasswordChange: authUser?.lastPasswordChange
   });
 
   // Calculate real user stats from orders
