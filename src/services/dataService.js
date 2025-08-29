@@ -619,6 +619,10 @@ const dataService = {
     return orders;
   },
 
+  getOrdersByUserId(userId) {
+    return orders.filter(o => o.userId === parseInt(userId));
+  },
+
   getOrder(id) {
     return orders.find(o => o.id === parseInt(id));
   },
@@ -636,9 +640,11 @@ const dataService = {
     const newOrder = {
       ...orderData,
       id: orders.length + 1,
+      orderId: orderData.orderId || `NN${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString()
     };
     orders.push(newOrder);
+    console.log('Order added to database:', newOrder);
     return newOrder;
   },
 

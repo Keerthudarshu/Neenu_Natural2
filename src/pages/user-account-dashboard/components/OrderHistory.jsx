@@ -88,7 +88,7 @@ const OrderHistory = ({ orders }) => {
                         Order #{order?.orderNumber}
                       </h3>
                       <p className="font-caption text-sm text-muted-foreground">
-                        Placed on {order?.date} • {order?.items?.length} items
+                        Placed on {order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : order?.date} • {order?.items?.length} items
                       </p>
                     </div>
                   </div>

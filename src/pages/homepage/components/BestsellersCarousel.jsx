@@ -113,7 +113,8 @@ const BestsellersCarousel = ({ onAddToCart }) => {
       onAddToCart({
         id: product?.id,
         name: product?.name,
-        price: product?.salePrice,
+        price: product?.price || product?.salePrice || 0,
+        originalPrice: product?.originalPrice || product?.price || product?.salePrice || 0,
         image: product?.image,
         variant: product?.weight,
         quantity: 1

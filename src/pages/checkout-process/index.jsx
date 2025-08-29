@@ -33,7 +33,11 @@ const CheckoutProcess = () => {
   const [paymentData, setPaymentData] = useState(null);
 
   // Calculate totals
-  const subtotal = cartItems?.reduce((sum, item) => sum + (item?.price * item?.quantity), 0);
+  const subtotal = cartItems?.reduce((sum, item) => {
+    const itemPrice = parseFloat(item?.price) || 0;
+    const itemQuantity = parseInt(item?.quantity) || 0;
+    return sum + (itemPrice * itemQuantity);
+  }, 0);
   const shippingCost = deliveryData?.price || (subtotal >= 499 ? 0 : 49);
   const discountAmount = appliedCoupon === 'FLAT10' && subtotal >= 1499 ? subtotal * 0.1 : 0;
   const total = subtotal + shippingCost - discountAmount;
@@ -109,6 +113,8 @@ const CheckoutProcess = () => {
 
       // Create order data
       const orderData = {
+        orderId,
+        orderNumber: orderId,
         userId: user?.id,
         customerName: user?.name || shippingData?.firstName + ' ' + shippingData?.lastName,
         customerEmail: user?.email || shippingData?.email,
@@ -117,9 +123,9 @@ const CheckoutProcess = () => {
           productId: item?.productId || item?.id,
           name: item?.name,
           variant: item?.variant,
-          quantity: item?.quantity,
-          price: item?.price,
-          total: (item?.price * item?.quantity)
+          quantity: parseInt(item?.quantity) || 0,
+          price: parseFloat(item?.price) || 0,
+          total: (parseFloat(item?.price) || 0) * (parseInt(item?.quantity) || 0)
         })),
         shippingAddress: {
           firstName: shippingData?.firstName || user?.firstName,
@@ -163,8 +169,13 @@ Phone: ${customerPhone}
 Email: ${customerEmail}
 
 Items Ordered:
-${cartItems?.map((item, index) => `${index + 1}. ${item?.name}
-   Qty: ${item?.quantity} x ₹${item?.price?.toFixed(2)} = ₹${(item?.price * item?.quantity)?.toFixed(2)}`).join('\n\n')}
+${cartItems?.map((item, index) => {
+  const itemPrice = parseFloat(item?.price) || 0;
+  const itemQuantity = parseInt(item?.quantity) || 0;
+  const itemTotal = itemPrice * itemQuantity;
+  return `${index + 1}. ${item?.name || 'Unknown Item'}
+   Qty: ${itemQuantity} x ₹${itemPrice.toFixed(2)} = ₹${itemTotal.toFixed(2)}`;
+}).join('\n\n')}
 
 Shipping Address:
 ${orderData.shippingAddress?.firstName} ${orderData.shippingAddress?.lastName}

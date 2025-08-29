@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
+import dataService from '../../services/dataService';
 import Header from '../../components/ui/Header';
 import DashboardSidebar from './components/DashboardSidebar';
 import DashboardOverview from './components/DashboardOverview';
@@ -27,14 +28,32 @@ const UserAccountDashboard = () => {
     dateOfBirth: authUser?.dateOfBirth || "1990-05-15",
     gender: authUser?.gender || "Not specified",
     memberSince: authUser?.memberSince || "January 2023",
-    totalOrders: authUser?.totalOrders || 3,
-    totalSpent: authUser?.totalSpent || "3747",
-    totalSaved: authUser?.totalSaved || "250",
-    loyaltyPoints: authUser?.loyaltyPoints || 374,
+    totalOrders: 0,
+    totalSpent: 0,
+    totalSaved: 0,
+    loyaltyPoints: 0,
     cartItemCount: getCartItemCount(),
-    wishlistCount: authUser?.wishlistCount || 3,
+    wishlistCount: authUser?.wishlistCount || 0,
     lastPasswordChange: authUser?.lastPasswordChange || "Not set"
   });
+
+  // Calculate real user stats from orders
+  useEffect(() => {
+    if (orders.length > 0) {
+      const totalSpent = orders.reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
+      const totalSaved = orders.reduce((sum, order) => sum + (parseFloat(order.discount) || 0), 0);
+      const loyaltyPoints = Math.floor(totalSpent * 0.1); // 10% of spending as points
+      
+      setUser(prev => ({
+        ...prev,
+        totalOrders: orders.length,
+        totalSpent: totalSpent.toFixed(2),
+        totalSaved: totalSaved.toFixed(2),
+        loyaltyPoints: loyaltyPoints,
+        cartItemCount: getCartItemCount()
+      }));
+    }
+  }, [orders, getCartItemCount]);
 
   // Update user data when authUser changes
   useEffect(() => {
@@ -57,106 +76,26 @@ const UserAccountDashboard = () => {
     }
   }, [authUser]);
 
-  // Mock orders data
-  const [orders] = useState([
-    {
-      id: 1,
-      orderNumber: "NN2024001234",
-      date: "20th Aug 2024",
-      status: "Delivered",
-      total: 1299.00,
-      subtotal: 1199.00,
-      shipping: 100.00,
-      discount: 0,
-      trackingNumber: "TRK123456789",
-      items: [
-        {
-          name: "Organic Turmeric Powder",
-          variant: "500g",
-          quantity: 2,
-          price: 299.00,
-          image: "https://images.pexels.com/photos/4198015/pexels-photo-4198015.jpeg"
-        },
-        {
-          name: "Cold Pressed Coconut Oil",
-          variant: "1L",
-          quantity: 1,
-          price: 599.00,
-          image: "https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg"
-        }
-      ],
-      shippingAddress: {
-        name: "Priya Sharma",
-        street: "123, MG Road, Koramangala",
-        city: "Bengaluru",
-        state: "Karnataka",
-        pincode: "560034",
-        phone: "+91 9876543210"
+  // Real orders data
+  const [orders, setOrders] = useState([]);
+
+  // Load user orders
+  useEffect(() => {
+    const loadUserOrders = () => {
+      try {
+        const userOrders = dataService.getOrdersByUserId(user?.id);
+        console.log('Loaded user orders:', userOrders);
+        setOrders(userOrders);
+      } catch (error) {
+        console.error('Error loading user orders:', error);
+        setOrders([]);
       }
-    },
-    {
-      id: 2,
-      orderNumber: "NN2024001235",
-      date: "18th Aug 2024",
-      status: "Shipped",
-      total: 849.00,
-      subtotal: 799.00,
-      shipping: 50.00,
-      discount: 0,
-      trackingNumber: "TRK123456790",
-      items: [
-        {
-          name: "Handmade Ghee",
-          variant: "500ml",
-          quantity: 1,
-          price: 450.00,
-          image: "https://images.pexels.com/photos/4198015/pexels-photo-4198015.jpeg"
-        },
-        {
-          name: "Organic Jaggery",
-          variant: "1kg",
-          quantity: 1,
-          price: 349.00,
-          image: "https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg"
-        }
-      ],
-      shippingAddress: {
-        name: "Priya Sharma",
-        street: "123, MG Road, Koramangala",
-        city: "Bengaluru",
-        state: "Karnataka",
-        pincode: "560034",
-        phone: "+91 9876543210"
-      }
-    },
-    {
-      id: 3,
-      orderNumber: "NN2024001236",
-      date: "15th Aug 2024",
-      status: "Processing",
-      total: 1599.00,
-      subtotal: 1499.00,
-      shipping: 100.00,
-      discount: 0,
-      items: [
-        {
-          name: "Spice Gift Box",
-          variant: "Premium Set",
-          quantity: 1,
-          price: 1499.00,
-          image: "https://images.pexels.com/photos/4198015/pexels-photo-4198015.jpeg"
-        }
-      ],
-      shippingAddress: {
-        name: "Priya Sharma",
-        street: "123, MG Road, Koramangala",
-        city: "Bengaluru",
-        state: "Karnataka",
-        pincode: "560034",
-        phone: "+91 9876543210"
-      }
+    };
+
+    if (user?.id) {
+      loadUserOrders();
     }
-  ]);
+  }, [user?.id]);
 
   // Mock addresses data
   const [addresses, setAddresses] = useState([
