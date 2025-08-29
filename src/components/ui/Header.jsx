@@ -9,6 +9,7 @@ import CartDrawer from './CartDrawer';
 import { useCart } from '../../contexts/CartContext.jsx';
 const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
   const { cartItems, getCartItemCount, updateQuantity, removeFromCart } = useCart();
+  const navigate = require('react-router-dom').useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
@@ -66,19 +67,36 @@ const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/homepage" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Icon name="Leaf" size={24} color="white" />
+              <div className="w-40 h-16 flex items-center justify-center">
+                <img src="/assets/images/logo.png" alt="Logo" className="w-40 h-16 object-contain" />
               </div>
-              <span className="font-heading font-bold text-xl text-foreground">
-                Neenu's Natural
-              </span>
+              
             </Link>
 
             {/* Search Bar */}
             <div className="flex-1 max-w-2xl mx-8">
               <form onSubmit={handleSearch} className="relative">
-                <select className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-transparent border-none text-sm text-muted-foreground focus:outline-none">
-                  <option>All Categories</option>
+                <select
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-transparent border-none text-sm text-muted-foreground focus:outline-none"
+                  onChange={e => {
+                    const value = e.target.value;
+                    if (value) navigate(value);
+                  }}
+                  defaultValue=""
+                >
+                  <option value="">All Categories</option>
+                  <option value="/product-collection-grid?category=unpolished-pulses">Unpolished Pulses, Dals & Rice</option>
+                  <option value="/product-collection-grid?category=poha">Poha / Aval</option>
+                  <option value="/product-collection-grid?category=sugars-honey">Sugars & Honey</option>
+                  <option value="/product-collection-grid?category=haircare">Haircare Products</option>
+                  <option value="/product-collection-grid?category=skincare">Skincare Products</option>
+                  <option value="/product-collection-grid?category=millet">Millet Items</option>
+                  <option value="/product-collection-grid?category=powders">Powders</option>
+                  <option value="/product-collection-grid?category=fries">Fries</option>
+                  <option value="/product-collection-grid?category=herbal-handmade">Herbal Handmade</option>
+                  <option value="/product-collection-grid?category=soaps">Soaps</option>
+                  <option value="/product-collection-grid?category=snacks">Snacks</option>
+                  <option value="/product-collection-grid?category=herbal-powders">Herbal Powders</option>
                 </select>
                 <Input
                   type="search"
