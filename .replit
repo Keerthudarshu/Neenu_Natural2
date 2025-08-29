@@ -5,7 +5,7 @@ run = "npm start"
 channel = "stable-25_05"
 
 [deployment]
-run = ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "5000"]
+run = ["npm", "run", "serve"]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 
