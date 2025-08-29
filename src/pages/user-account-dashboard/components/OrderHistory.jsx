@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Image from '../../../components/AppImage';
+import { downloadInvoice, printInvoice } from '../../../utils/invoiceGenerator';
+import dataService from '../../../services/dataService';
 
 const OrderHistory = ({ orders }) => {
+  const { user } = useAuth();
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -36,6 +40,26 @@ const OrderHistory = ({ orders }) => {
 
   const toggleOrderExpansion = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
+  };
+
+  const handleDownloadInvoice = (order) => {
+    try {
+      const settings = dataService.getSettings();
+      downloadInvoice(order, user, settings);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Failed to download invoice. Please try again.');
+    }
+  };
+
+  const handlePrintInvoice = (order) => {
+    try {
+      const settings = dataService.getSettings();
+      printInvoice(order, user, settings);
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+      alert('Failed to print invoice. Please try again.');
+    }
   };
 
   return (
@@ -235,8 +259,19 @@ const OrderHistory = ({ orders }) => {
                         Cancel Order
                       </Button>
                     )}
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownloadInvoice(order)}
+                    >
                       Download Invoice
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handlePrintInvoice(order)}
+                    >
+                      Print Invoice
                     </Button>
                     {order?.status === 'Delivered' && (
                       <Button variant="outline" size="sm">

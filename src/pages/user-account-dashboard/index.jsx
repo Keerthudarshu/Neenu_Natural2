@@ -19,6 +19,9 @@ const UserAccountDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  // Real orders data - moved before any useEffect that uses it
+  const [orders, setOrders] = useState([]);
+
   // Use real user data from AuthContext or fallback to mock data
   const [user, setUser] = useState({
     id: authUser?.id || 1,
@@ -75,9 +78,6 @@ const UserAccountDashboard = () => {
       });
     }
   }, [authUser]);
-
-  // Real orders data
-  const [orders, setOrders] = useState([]);
 
   // Load user orders
   useEffect(() => {

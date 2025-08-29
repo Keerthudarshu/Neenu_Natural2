@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Package, Truck, CheckCircle } from 'lucide-react';
+import { Search, Eye, Package, Truck, CheckCircle, Download, Printer } from 'lucide-react';
 import dataService from '../../../services/dataService';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { downloadInvoice, printInvoice } from '../../../utils/invoiceGenerator';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -63,6 +64,36 @@ const OrderManagement = () => {
         return 'text-destructive bg-destructive/10';
       default:
         return 'text-muted-foreground bg-muted/10';
+    }
+  };
+
+  const handleDownloadInvoice = (order) => {
+    try {
+      const settings = dataService.getSettings();
+      const customer = dataService.getUser(order.userId) || { 
+        name: order.customerName, 
+        email: order.customerEmail, 
+        phone: order.customerPhone 
+      };
+      downloadInvoice(order, customer, settings);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Failed to download invoice. Please try again.');
+    }
+  };
+
+  const handlePrintInvoice = (order) => {
+    try {
+      const settings = dataService.getSettings();
+      const customer = dataService.getUser(order.userId) || { 
+        name: order.customerName, 
+        email: order.customerEmail, 
+        phone: order.customerPhone 
+      };
+      printInvoice(order, customer, settings);
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+      alert('Failed to print invoice. Please try again.');
     }
   };
 
@@ -183,6 +214,20 @@ const OrderManagement = () => {
                         <option value="delivered">Delivered</option>
                         <option value="cancelled">Cancelled</option>
                       </select>
+                      <button
+                        onClick={() => handleDownloadInvoice(order)}
+                        className="p-1 text-primary hover:text-primary/80 transition-colors"
+                        title="Download Invoice"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handlePrintInvoice(order)}
+                        className="p-1 text-primary hover:text-primary/80 transition-colors"
+                        title="Print Invoice"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
